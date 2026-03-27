@@ -47,9 +47,8 @@ jobs:
 
     - name: Run Backend Smoke Test
       run: |
-        cd backend
-        # Start uvicorn in background
-        nohup uvicorn main:app --host 127.0.0.1 --port 8000 &
+        # Start uvicorn from root in background
+        nohup uvicorn backend.main:app --host 127.0.0.1 --port 8000 &
         # Wait for server to be ready
         timeout 60s bash -c 'until curl -s http://127.0.0.1:8000/index.html; do sleep 2; done'
         
