@@ -7,11 +7,11 @@ from contextlib import asynccontextmanager
 from typing import List
 import os
 
-import models
-import schemas
-import auth
-import database
-from database import engine, get_db
+from . import models
+from . import schemas
+from . import auth
+from . import database
+from .database import engine, get_db
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
