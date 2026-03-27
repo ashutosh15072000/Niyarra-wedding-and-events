@@ -1,22 +1,22 @@
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy.orm import Session
 from fastapi.staticfiles import StaticFiles
-from datetime import timedelta
+from sqlalchemy.orm import Session
 from contextlib import asynccontextmanager
+from datetime import timedelta
 from typing import List
-import os
 import logging
+import os
+
+from backend import auth
+from backend import database
+from backend import models
+from backend import schemas
+from backend.database import engine, get_db
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-from backend import models
-from backend import schemas
-from backend import auth
-from backend import database
-from backend.database import engine, get_db
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
