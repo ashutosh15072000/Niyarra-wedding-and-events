@@ -1,5 +1,5 @@
-from database import SessionLocal
-from models import Guest
+from .database import SessionLocal
+from .models import Guest
 
 def seed():
     db = SessionLocal()
