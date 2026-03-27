@@ -200,11 +200,14 @@ function renderTable(data) {
 
         const statusHtml = g.checked_in ? `<span class="status-badge arrived">Arrived</span>` : `<span class="status-badge pending">Pending</span>`;
 
+        const isGuestPage = window.location.pathname.includes('guests.html');
         let adminHtml = '';
-        if (isAdmin) {
-            adminHtml = `<td class="admin-col"><button class="btn btn-outline" onclick="openEdit(${g.id})"><i data-lucide="edit"></i> Edit</button></td>`;
-        } else {
-            adminHtml = `<td class="admin-col hidden"></td>`; // Keep structure but hide
+        if (!isGuestPage) {
+            if (isAdmin) {
+                adminHtml = `<td class="admin-col"><button class="btn btn-outline" onclick="openEdit(${g.id})"><i data-lucide="edit"></i> Edit</button></td>`;
+            } else {
+                adminHtml = `<td class="admin-col hidden"></td>`; // Keep structure but hide
+            }
         }
 
         let days = [];
