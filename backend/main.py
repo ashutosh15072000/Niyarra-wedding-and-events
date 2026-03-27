@@ -7,7 +7,10 @@ from contextlib import asynccontextmanager
 from typing import List
 import os
 
-import models, schemas, auth, database
+import models
+import schemas
+import auth
+import database
 from database import engine, get_db
 
 @asynccontextmanager

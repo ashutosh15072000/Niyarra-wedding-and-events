@@ -1,6 +1,5 @@
-from database import SessionLocal, engine, Base
+from database import SessionLocal
 from models import Guest
-from datetime import datetime
 
 def seed():
     db = SessionLocal()
