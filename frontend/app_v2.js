@@ -141,6 +141,22 @@ async function toggleCheckin(id) {
     } catch (e) { console.error(e); }
 }
 
+async function deleteGuest(id) {
+    if (!confirm('Are you sure you want to permanently delete this guest?')) return;
+    try {
+        const res = await fetch(`${API_URL}/guests/${id}`, { method: 'DELETE' });
+        if (!res.ok) {
+            const errText = await res.text();
+            alert(`Error deleting guest: ${errText}`);
+            return;
+        }
+        fetchGuests();
+    } catch (e) {
+        console.error(e);
+        alert(`Network error: ${e.message}`);
+    }
+}
+
 function openWhatsApp(guest) {
     // Correct mobile formatting
     let num = guest.driver_mobile || '';

@@ -114,6 +114,15 @@ def toggle_checkin(guest_id: int, db: Session = Depends(get_db)):
     db.refresh(db_guest)
     return db_guest
 
+@app.delete("/api/guests/{guest_id}")
+def delete_guest(guest_id: int, db: Session = Depends(get_db)):
+    db_guest = db.query(models.Guest).filter(models.Guest.id == guest_id).first()
+    if not db_guest:
+        raise HTTPException(status_code=404, detail="Guest not found")
+    db.delete(db_guest)
+    db.commit()
+    return {"status": "success"}
+
 @app.put("/api/guests/{guest_id}", response_model=schemas.GuestRead)
 def edit_guest(guest_id: int, guest_update: schemas.GuestUpdate, db: Session = Depends(get_db)):
     db_guest = db.query(models.Guest).filter(models.Guest.id == guest_id).first()
