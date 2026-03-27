@@ -107,7 +107,9 @@ def edit_guest(guest_id: int, guest_update: schemas.GuestUpdate, db: Session = D
     db.refresh(db_guest)
     return db_guest
 
-# Optional: Ensure frontend directory exists to avoid crash
-frontend_path = os.path.join(os.path.dirname(__file__), "..", "frontend")
-os.makedirs(frontend_path, exist_ok=True)
-app.mount("/", StaticFiles(directory=frontend_path, html=True), name="frontend")
+# Only mount static files in local development, NOT on Vercel
+# Vercel serves frontend/ via @vercel/static in vercel.json
+if not os.environ.get("VERCEL"):
+    frontend_path = os.path.join(os.path.dirname(__file__), "..", "frontend")
+    if os.path.isdir(frontend_path):
+        app.mount("/", StaticFiles(directory=frontend_path, html=True), name="frontend")
