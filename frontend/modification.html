@@ -12,7 +12,10 @@
 <body>
     <div class="app-container">
         <header class="navbar">
-            <div class="logo">🏨 Niyarra Guest Manager</div>
+            <div class="logo" style="display: flex; align-items: center; gap: 10px;">
+                <img src="logo.png" alt="Logo" class="nav-logo" style="height: 32px; width: auto; object-fit: contain; border-radius: 4px;" onerror="this.style.display='none'">
+                <span>🏨 Niyarra Guest Manager</span>
+            </div>
             <div class="hamburger-container">
                 <button id="btn-hamburger" class="btn btn-outline"><i data-lucide="menu"></i> Menu</button>
                 <div id="nav-dropdown" class="nav-dropdown hidden">
