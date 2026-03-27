@@ -1,4 +1,1 @@
-from backend.main import app
-
-# This exports the FastAPI app as 'app' for Vercel
-app = app
+from backend.main import app  # noqa: F401 - 'app' is used by Vercel runtime

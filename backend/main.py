@@ -1,11 +1,16 @@
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from fastapi.staticfiles import StaticFiles
 from datetime import timedelta
 from contextlib import asynccontextmanager
 from typing import List
 import os
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 from backend import models
 from backend import schemas
@@ -34,6 +39,15 @@ async def lifespan(app: FastAPI):
     yield
 
 app = FastAPI(lifespan=lifespan)
+
+# Allow requests from all origins (needed for Vercel deployment)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/token")
 
@@ -77,11 +91,17 @@ def get_guests(db: Session = Depends(get_db)):
 
 @app.post("/api/guests", response_model=schemas.GuestRead)
 def create_guest(guest: schemas.GuestCreate, db: Session = Depends(get_db)):
-    db_guest = models.Guest(**guest.model_dump())
-    db.add(db_guest)
-    db.commit()
-    db.refresh(db_guest)
-    return db_guest
+    try:
+        db_guest = models.Guest(**guest.model_dump())
+        db.add(db_guest)
+        db.commit()
+        db.refresh(db_guest)
+        logger.info(f"Created guest: {db_guest.name}")
+        return db_guest
+    except Exception as e:
+        logger.error(f"Error creating guest: {e}")
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.put("/api/guests/{guest_id}/checkin", response_model=schemas.GuestRead)
 def toggle_checkin(guest_id: int, db: Session = Depends(get_db)):

@@ -115,14 +115,23 @@ async function handleAddGuest(e) {
         departure_time: document.getElementById('guest-departure-time').value
     };
     try {
-        await fetch(`${API_URL}/guests`, {
+        const res = await fetch(`${API_URL}/guests`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         });
+        if (!res.ok) {
+            const errText = await res.text();
+            console.error('API Error:', res.status, errText);
+            alert(`Error saving guest: ${res.status} - ${errText}`);
+            return;
+        }
         addForm.reset();
         fetchGuests();
-    } catch (e) { console.error(e); }
+    } catch (e) { 
+        console.error('Network Error:', e);
+        alert(`Network error: ${e.message}`);
+    }
 }
 
 async function toggleCheckin(id) {
