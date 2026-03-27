@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Niyarra Transport Statistics</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="style.css?v=2">
+    <style>
+        .chart-container {
+            background: rgba(0, 0, 0, 0.4);
+            color: var(--text-main);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            margin-top: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            max-width: 900px;
+            margin-left: auto;
+            margin-right: auto;
+            backdrop-filter: blur(10px);
+        }
+
+        /* Modern Table Enhancements */
+        #stats-details-container {
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            border: none;
+        }
+
+        .hover-row {
+            transition: background-color 0.2s ease, transform 0.2s ease;
+        }
+
+        .hover-row:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .pax-badge {
+            background: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 700;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .time-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(129, 140, 248, 0.2);
+            color: #a5b4fc;
+            padding: 5px 10px;
+            border-radius: 8px;
+            font-size: 0.9em;
+            font-weight: 600;
+            border: 1px solid rgba(129, 140, 248, 0.3);
+        }
+
+        .transport-badge {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 5px 10px;
+            border-radius: 8px;
+            font-size: 0.85em;
+        }
+
+        .empty-cell {
+            color: #cbd5e1;
+        }
+
+        .icon-sm {
+            width: 14px;
+            height: 14px;
+        }
+
+        .arrived-badge {
+            background: #dcfce7;
+            color: #166534;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+
+        .pending-badge {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+
+        /* Modern Interactive KPI Cards */
+        .kpi-card {
+            background: rgba(30, 41, 59, 0.4);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 28px;
+            min-width: 200px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            text-align: center;
+            backdrop-filter: blur(12px);
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+            border-color: var(--primary);
+            background: rgba(30, 41, 59, 0.6);
+        }
+
+        .kpi-card-title {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            margin-bottom: 16px;
+        }
+
+        .kpi-card-value {
+            font-size: 3.5rem;
+            font-weight: 900;
+            color: var(--text-main);
+            line-height: 1;
+            text-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+
+        .kpi-card-total {
+            background: rgba(37, 99, 235, 0.1);
+            border-color: rgba(37, 99, 235, 0.3);
+        }
+
+        .kpi-card-total .kpi-card-value {
+            color: #60a5fa;
+            text-shadow: 0 0 20px rgba(37, 99, 235, 0.3);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app-container">
+        <header class="navbar">
+            <div class="logo">🏨 Niyarra Guest Manager</div>
+            <div class="hamburger-container">
+                <button id="btn-hamburger" class="btn btn-outline"><i data-lucide="menu"></i> Menu</button>
+                <div id="nav-dropdown" class="nav-dropdown hidden">
+                    <a href="/index.html" class="btn btn-outline w-full justify-start"><i data-lucide="plus"></i> Add Guest</a>
+                    <a href="/guests.html" class="btn btn-outline w-full justify-start"><i data-lucide="list"></i> Guest List</a>
+                    <a href="/modification.html" class="btn btn-outline w-full justify-start"><i data-lucide="edit"></i> Modifications</a>
+                    <a href="/transport-stats.html" class="btn btn-outline w-full justify-start"><i data-lucide="bar-chart"></i> Stats</a>
+                    <button id="btn-export" class="btn btn-outline w-full justify-start"><i data-lucide="download"></i> Export data</button>
+                    <button id="btn-login-modal" class="btn btn-primary w-full justify-start"><i data-lucide="user"></i> Admin Login</button>
+                    <button id="btn-logout" class="btn btn-outline w-full justify-start hidden"><i data-lucide="log-out"></i> Logout</button>
+                </div>
+            </div>
+        </header>
+
+        <main class="content">
+            <div class="table-header" style="text-align: center; margin-bottom: 20px; margin-top: 20px;">
+                <h2>
+                    <select id="stats-type-selector"
+                        style="font-size: 1.5rem; font-weight: 700; text-align: center; border: 1px solid var(--border); border-radius: 12px; padding: 12px 24px; background: var(--card-bg); backdrop-filter: var(--glass-blur); cursor: pointer; color: var(--text-main); box-shadow: 0 10px 40px rgba(0,0,0,0.3); outline: none;">
+                        <option value="transportation">Transportation Arrival Analytics</option>
+                        <option value="hotels">Hotel Allocation Analytics</option>
+                    </select>
+                </h2>
+                <p id="stats-description" style="color: #64748b; margin-top: 5px;">Visualizing guest influx volumes
+                    across the day footprint. Hover over a bar to see specifics.</p>
+            </div>
+
+            <div id="transportation-filters" class="filter-bar"
+                style="max-width: 800px; margin-left: auto; margin-right: auto; margin-bottom: 20px;">
+                <div class="form-group" style="margin-bottom: 0; flex: 1;">
+                    <select id="stats-transport-mode" class="filter-select" title="Select Direction">
+                        <option value="arrivals">Arrivals</option>
+                        <option value="departures">Departures</option>
+                    </select>
+                    <small style="display:block;font-size:11px;color:#64748b;margin-top:4px;">1. Select Direction</small>
+                </div>
+                <div class="form-group" style="margin-bottom: 0; flex: 1;">
+                    <select id="stats-filter-date" class="filter-select" title="Select Date">
+                        <option value="">All Dates</option>
+                    </select>
+                    <small style="display:block;font-size:11px;color:#64748b;margin-top:4px;">2. Select Specific Date</small>
+                </div>
+            </div>
+
+            <div id="hotel-filters" class="filter-bar"
+                style="display: none; max-width: 800px; margin-left: auto; margin-right: auto; margin-bottom: 20px;">
+                <div class="form-group" style="margin-bottom: 0;">
+                    <select id="stats-filter-day" class="filter-select" title="Filter by Event Day">
+                        <option value="">All Event Days</option>
+                        <option value="day1">Day 1 (D1)</option>
+                        <option value="day2">Day 2 (D2)</option>
+                        <option value="day3">Day 3 (D3)</option>
+                    </select>
+                    <small style="display:block;font-size:11px;color:#64748b;margin-top:4px;">Event Day Filter</small>
+                </div>
+            </div>
+
+            <!-- Global Analytics Overview -->
+            <div class="dashboard-stats"
+                style="margin-top: 10px; margin-bottom: 30px; max-width: 900px; margin-left: auto; margin-right: auto;">
+                <div class="stat-card">
+                    <div class="stat-icon"><i data-lucide="users"></i></div>
+                    <div class="stat-details">
+                        <span class="stat-value" id="total-pax">0</span>
+                        <span class="stat-label">Expected Pax</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon success-icon"><i data-lucide="check-circle"></i></div>
+                    <div class="stat-details">
+                        <span class="stat-value" id="arrived-pax">0</span>
+                        <span class="stat-label">Arrived Pax</span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="room-chart-container" style="display: none; margin-top: 10px; margin-bottom: 40px;">
+                <h3
+                    style="text-align: center; color: #334155; margin-bottom: 24px; font-weight: 700; font-size: 1.5rem;">
+                    Accommodation Metrics</h3>
+                <div id="room-kpi-grid"
+                    style="display: flex; flex-wrap: wrap; justify-content: center; gap: 24px; padding: 10px;">
+                    <!-- JS will load KPI cards -->
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <canvas id="transportChart"></canvas>
+            </div>
+
+            <div id="stats-details-container"
+                style="display: none; max-width: 800px; margin-left: auto; margin-right: auto; margin-top: 20px; background: var(--card-bg); backdrop-filter: var(--glass-blur); padding: 30px; border: 1px solid var(--border); border-radius: 20px; box-shadow: 0 15px 50px rgba(0,0,0,0.5);">
+                <h3 style="margin-bottom: 15px; font-size: 1.25rem;">Guest Roster: <span id="stats-hover-label"
+                        style="color: var(--primary);"></span></h3>
+                <section class="table-section">
+                    <div class="table-container">
+                        <table>
+                            <thead id="stats-details-thead">
+                            </thead>
+                            <tbody id="stats-details-tbody">
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <script src="app_v2.js?v=2024.final"></script>
+</body>
+
+</html>

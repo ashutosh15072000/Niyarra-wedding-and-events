@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Niyarra Guest List</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link rel="stylesheet" href="style.css?v=5">
+</head>
+<body>
+    <div class="app-container">
+        <header class="navbar">
+            <div class="logo">🏨 Niyarra Guest Manager</div>
+            <div class="hamburger-container">
+                <button id="btn-hamburger" class="btn btn-outline"><i data-lucide="menu"></i> Menu</button>
+                <div id="nav-dropdown" class="nav-dropdown hidden">
+                    <a href="/index.html" class="btn btn-outline w-full justify-start"><i data-lucide="plus"></i> Add Guest</a>
+                    <a href="/guests.html" class="btn btn-outline w-full justify-start"><i data-lucide="list"></i> Guest List</a>
+                    <a href="/modification.html" class="btn btn-outline w-full justify-start"><i data-lucide="edit"></i> Modifications</a>
+                    <a href="/transport-stats.html" class="btn btn-outline w-full justify-start"><i data-lucide="bar-chart"></i> Stats</a>
+                    <button id="btn-export" class="btn btn-outline w-full justify-start"><i data-lucide="download"></i> Export data</button>
+                    <button id="btn-login-modal" class="btn btn-primary w-full justify-start"><i data-lucide="user"></i> Admin Login</button>
+                    <button id="btn-logout" class="btn btn-outline w-full justify-start hidden"><i data-lucide="log-out"></i> Logout</button>
+                </div>
+            </div>
+        </header>
+
+        <main class="content">
+            <div class="filter-bar" style="margin-bottom: 20px;">
+                <h3 style="margin-top: 0; margin-bottom: 15px; font-size: 14px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;">1. Select Active Department Role</h3>
+                <select id="department-role" class="filter-select" style="width: 100%; max-width: 400px; padding: 12px; font-size: 16px; font-weight: 600;">
+                    <option value="rsvp">RSVP Department (Master Edit)</option>
+                    <option value="hotel">Hotel Department</option>
+                    <option value="transport">Transport / Logistics Department</option>
+                </select>
+            </div>
+
+            <div class="filter-bar" style="margin-bottom: 15px;">
+                <input type="text" id="filter-name" placeholder="Search by name..." class="filter-input">
+                <select id="filter-status" class="filter-select">
+                    <option value="all">All Statuses</option>
+                    <option value="arrived">Arrived</option>
+                    <option value="pending">Pending</option>
+                </select>
+                <select id="filter-day" class="filter-select">
+                    <option value="all">All Days</option>
+                    <option value="0">Day 0</option>
+                    <option value="1">Day 1</option>
+                    <option value="2">Day 2</option>
+                    <option value="3">Day 3</option>
+                </select>
+            </div>
+
+            <section class="table-section" style="margin-top: 20px;">
+                <div class="table-header">
+                    <h2>Guest List Output</h2>
+                </div>
+                <div class="table-container">
+                    <table id="guest-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Pax</th>
+                                <th>Guest Mobile</th>
+                                <th>Hotel</th>
+                                <th class="col-room">Room</th>
+                                <th class="col-floor">Floor</th>
+                                <th class="col-driver">Driver Details</th>
+                                <th>Days</th>
+                                <th class="col-transport">Transport</th>
+                                <th class="col-status">Status</th>
+                                <th class="col-notes">Notes</th>
+                                <th class="col-actions">Actions</th>
+                                <th class="admin-col hidden">Admin</th>
+                            </tr>
+                        </thead>
+                        <tbody id="guest-tbody">
+                            <!-- Rendered dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Login Modal -->
+    <div id="login-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Admin Login</h2>
+                <button class="close-modal"><i data-lucide="x"></i></button>
+            </div>
+            <form id="login-form">
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" id="login-username" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="login-password" required>
+                </div>
+                <div id="login-error" class="error-msg"></div>
+                <button type="submit" class="btn btn-primary w-full">Login</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div id="edit-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Edit Guest</h2>
+                <button class="close-modal"><i data-lucide="x"></i></button>
+            </div>
+            <form id="edit-guest-form">
+                <input type="hidden" id="edit-guest-id">
+                <div class="form-group">
+                    <label>Guest Name</label>
+                    <input type="text" id="edit-guest-name">
+                </div>
+                <div class="form-group">
+                    <label>Guest Mobile No.</label>
+                    <input type="text" id="edit-guest-mobile">
+                </div>
+                <div class="form-group">
+                    <label>Number of People</label>
+                    <input type="number" id="edit-guest-pax" min="1">
+                </div>
+                <div id="edit-family-members-container" style="background: rgba(255, 255, 255, 0.05); padding: 15px; border-radius: 10px; margin-bottom: 15px; border: 1px solid var(--border); display: none;"></div>
+                <div class="form-group" id="edit-hotel-name-row">
+                    <label>Hotel Name</label>
+                    <select id="edit-guest-hotel" class="filter-select">
+                        <option value="">Select Hotel...</option>
+                        <option value="Jaypee Palace">Jaypee Palace</option>
+                        <option value="Taj Convention Centre">Taj Convention Centre</option>
+                        <option value="ITC Mughal">ITC Mughal</option>
+                        <option value="The Oberoi Amarvilas">The Oberoi Amarvilas</option>
+                        <option value="Courtyard by Marriott">Courtyard by Marriott</option>
+                        <option value="Trident Agra">Trident Agra</option>
+                        <option value="DoubleTree by Hilton">DoubleTree by Hilton</option>
+                        <option value="Radisson Hotel">Radisson Hotel</option>
+                    </select>
+                </div>
+                <div class="form-row" id="edit-hotel-row">
+                    <div class="form-group" style="flex:1;">
+                        <label for="edit-guest-room">Room Number</label>
+                        <input type="text" id="edit-guest-room" placeholder="Room Number">
+                    </div>
+                    <div class="form-group">
+                        <label>Floor</label>
+                        <select id="edit-guest-floor" class="filter-select">
+                            <option value="">Select Floor...</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                            <option value="6">6</option>
+                            <option value="7">7</option>
+                            <option value="8">8</option>
+                            <option value="9">9</option>
+                            <option value="10">10</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group checkbox-group" style="padding-top: 10px;" id="edit-bedding-row">
+                    <input type="checkbox" id="edit-guest-extra-bedding">
+                    <label for="edit-guest-extra-bedding">Requires Extra Bedding?</label>
+                </div>
+                <div class="form-group" id="edit-description-row">
+                    <label>Description / Notes</label>
+                    <textarea id="edit-guest-description" rows="2" placeholder="Any special requests or details..."></textarea>
+                </div>
+                <div class="form-group" id="edit-driver-name-row">
+                    <label>Driver Name</label>
+                    <input type="text" id="edit-guest-driver-name">
+                </div>
+                <div class="form-group">
+                    <label>Driver Mobile No.</label>
+                    <input type="text" id="edit-guest-driver">
+                </div>
+                <div class="form-group checkbox-group day-checkboxes">
+                    <label>Attendance Days:</label>
+                    <div style="display: flex; gap: 10px;">
+                        <label><input type="checkbox" id="edit-guest-day0"> Day 0</label>
+                        <label><input type="checkbox" id="edit-guest-day1"> Day 1</label>
+                        <label><input type="checkbox" id="edit-guest-day2"> Day 2</label>
+                        <label><input type="checkbox" id="edit-guest-day3"> Day 3</label>
+                    </div>
+                </div>
+
+                <!-- Logistics & Transportation Section -->
+                <div class="form-group checkbox-group" style="margin-top: 15px; border-top: 1px solid #e2e8f0; padding-top: 15px;">
+                    <input type="checkbox" id="edit-guest-transport-needed" onchange="document.getElementById('edit-transport-details').style.display = this.checked ? 'block' : 'none'">
+                    <label for="edit-guest-transport-needed" style="font-weight: 600;">Needs Transport / Logistics?</label>
+                </div>
+                
+                <div id="edit-transport-details" style="display: none; background: rgba(0, 0, 0, 0.2); padding: 15px; border-radius: 10px; margin-bottom: 15px; border: 1px solid var(--border);">
+                    <div class="form-group">
+                        <label>Transport Type</label>
+                        <select id="edit-guest-transport-type" class="filter-select">
+                            <option value="">Select Type...</option>
+                            <option value="Airport">Airport</option>
+                            <option value="Railway">Railway Station</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Arrival Location</label>
+                        <input type="text" id="edit-guest-arrival-location" placeholder="e.g. IGI Airport Terminal 3">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Arrival Date</label>
+                            <input type="date" id="edit-guest-arrival-date">
+                        </div>
+                        <div class="form-group">
+                            <label>Arrival Time</label>
+                            <input type="time" id="edit-guest-arrival-time">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Flight / Train No.</label>
+                        <input type="text" id="edit-guest-flight-train" placeholder="e.g. AI-101 / 12301">
+                    </div>
+                    <div class="form-group checkbox-group" style="margin-top: 10px;">
+                        <input type="checkbox" id="edit-guest-pickup-arranged">
+                        <label for="edit-guest-pickup-arranged">Pick-up Arranged?</label>
+                    </div>
+                    <div class="form-group checkbox-group">
+                        <input type="checkbox" id="edit-guest-dropoff-arranged" onchange="document.getElementById('edit-dropoff-details').style.display = this.checked ? 'block' : 'none'">
+                        <label for="edit-guest-dropoff-arranged">Drop-off Needed?</label>
+                    </div>
+                    <div id="edit-dropoff-details" style="display: none; padding-left: 20px; border-left: 2px solid var(--primary); margin-bottom: 10px;">
+                        <div class="form-group">
+                            <label>Departure Transport Type</label>
+                            <select id="edit-guest-departure-transport-type" class="filter-select">
+                                <option value="">Select Type...</option>
+                                <option value="Airport">Airport</option>
+                                <option value="Railway">Railway Station</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Departure Location</label>
+                            <input type="text" id="edit-guest-departure-location" placeholder="e.g. IGI Airport Terminal 3">
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Departure Date</label>
+                                <input type="date" id="edit-guest-departure-date">
+                            </div>
+                            <div class="form-group">
+                                <label>Departure Time</label>
+                                <input type="time" id="edit-guest-departure-time">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Flight / Train No.</label>
+                            <input type="text" id="edit-guest-departure-flight-train" placeholder="e.g. AI-202">
+                        </div>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 15px; margin-top: 15px;">
+                    <button type="button" class="btn btn-outline w-full" onclick="document.getElementById('edit-modal').classList.add('hidden')">Cancel</button>
+                    <button type="submit" class="btn btn-primary w-full">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    <!-- Note Modal -->
+    <div id="note-modal" class="modal hidden">
+        <div class="modal-content" style="max-width: 450px;">
+            <div class="modal-header">
+                <h2>Guest Notes</h2>
+                <button class="close-modal" onclick="document.getElementById('note-modal').classList.add('hidden')"><i data-lucide="x"></i></button>
+            </div>
+            <div id="note-text" style="font-size: 14px; line-height: 1.5; white-space: pre-wrap; color: var(--text-main); margin-bottom: 20px;"></div>
+            <button class="btn btn-outline w-full" onclick="document.getElementById('note-modal').classList.add('hidden')">Close</button>
+        </div>
+    </div>
+
+    <script src="app_v2.js?v=2024.final"></script>
+</body>
+</html>

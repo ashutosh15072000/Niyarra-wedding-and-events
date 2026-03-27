@@ -1,0 +1,223 @@
+from database import SessionLocal, engine, Base
+from models import Guest
+from datetime import datetime
+
+def seed():
+    db = SessionLocal()
+    
+    print("Clearing mapping arrays...")
+    db.query(Guest).delete()
+    
+    print("Populating edge-case mockups...")
+    guests = [
+        Guest(
+            name="Alexander Wright",
+            members_names="Sarah Wright, Leo Wright",
+            guest_mobile="+1 (555) 019-3827",
+            pax=3,
+            hotel="The Grand Niyarra Resort",
+            room="402",
+            floor="4",
+            day1=True, day2=True, day3=True,
+            checked_in=True,
+            transport_needed=True,
+            transport_type="Airport Transport",
+            arrival_location="JFK Terminal 4",
+            arrival_date="2023-11-01",
+            arrival_time="14:30",
+            flight_train_number="DL 4032",
+            pickup_arranged=True,
+            driver_name="Michael Chen",
+            driver_mobile="555-010-9922",
+            departure_date="2023-11-04",
+            departure_time="09:00",
+            dropoff_arranged=True
+        ),
+        Guest(
+            name="Priya Sharma",
+            members_names="",
+            guest_mobile="+44 7700 900077",
+            pax=1,
+            hotel="The Grand Niyarra Resort",
+            room="410",
+            floor="4",
+            day1=False, day2=True, day3=True,
+            checked_in=False,
+            transport_needed=True,
+            transport_type="Railway Station",
+            arrival_location="Central Station",
+            arrival_date="2023-11-02",
+            arrival_time="08:15",
+            flight_train_number="Eurostar 9014",
+            pickup_arranged=False,
+            driver_name="",
+            driver_mobile=""
+        ),
+        Guest(
+            name="James & Emily Thompson",
+            members_names="Emily Thompson",
+            guest_mobile="555-019-1122",
+            pax=2,
+            hotel="Boutique Niyarra Downtown",
+            room="105",
+            floor="1",
+            day1=True, day2=True, day3=False,
+            checked_in=True,
+            transport_needed=False,
+            arrival_date="2023-11-01",
+            arrival_time="11:45"
+        ),
+        Guest(
+            name="Dr. Kenji Sato",
+            members_names="Yumi Sato, Ken Sato Jr.",
+            guest_mobile="+81 90-1234-5678",
+            pax=3,
+            hotel="Boutique Niyarra Downtown",
+            room="201",
+            floor="2",
+            day1=True, day2=True, day3=True,
+            checked_in=False,
+            transport_needed=True,
+            transport_type="Airport Transport",
+            arrival_location="JFK Terminal 1",
+            arrival_date="2023-11-01",
+            arrival_time="19:20",
+            flight_train_number="JL 004",
+            pickup_arranged=True,
+            driver_name="David Rossi",
+            driver_mobile="555-011-3444"
+        ),
+        Guest(
+            name="Maria Rodriguez Group",
+            members_names="Carlos R, Julia R, Sofia R",
+            guest_mobile="+34 600 123 456",
+            pax=4,
+            hotel="The Grand Niyarra Resort",
+            room="505",
+            floor="5",
+            day1=True, day2=True, day3=True,
+            checked_in=True,
+            transport_needed=True,
+            transport_type="Airport Transport",
+            arrival_location="JFK Terminal 8",
+            arrival_date="2023-11-01",
+            arrival_time="09:10",
+            flight_train_number="IB 6251",
+            pickup_arranged=True,
+            driver_name="Michael Chen",
+            driver_mobile="555-010-9922"
+        ),
+        Guest(
+            name="Marcus Holloway",
+            members_names="",
+            guest_mobile="555-018-7777",
+            pax=1,
+            hotel="Niyarra Express Accommodations",
+            room="112",
+            floor="1",
+            day1=True, day2=True, day3=True,
+            checked_in=True,
+            transport_needed=False,
+            arrival_date="2023-10-31",
+            arrival_time="07:00"
+        ),
+        Guest(
+            name="Isabella Rossi",
+            members_names="",
+            guest_mobile="+39 333 123 4567",
+            pax=1,
+            hotel="Boutique Niyarra Downtown",
+            room="202",
+            floor="2",
+            day1=False, day2=True, day3=False,
+            checked_in=False,
+            transport_needed=True,
+            transport_type="Railway Station",
+            arrival_location="North Station",
+            arrival_date="2023-11-02",
+            arrival_time="13:45",
+            flight_train_number="Frecciarossa 1000",
+            pickup_arranged=True,
+            driver_name="David Rossi",
+            driver_mobile="555-011-3444"
+        ),
+        Guest(
+            name="The Peterson Family",
+            members_names="Dave Peterson, Anna Peterson, Tim Peterson",
+            guest_mobile="555-013-4455",
+            pax=3,
+            hotel="The Grand Niyarra Resort",
+            room="505",  # Same room as Maria to test Set distinct count!
+            floor="5",
+            day1=True, day2=False, day3=False,
+            checked_in=True,
+            transport_needed=False
+        ),
+        Guest(
+            name="Liam O'Connor",
+            members_names="",
+            guest_mobile="+353 87 123 4567",
+            pax=1,
+            hotel="Niyarra Express Accommodations",
+            room="210",
+            floor="2",
+            day1=False, day2=False, day3=True,
+            checked_in=False,
+            transport_needed=True,
+            transport_type="Airport Transport",
+            arrival_location="JFK Terminal 4",
+            arrival_date="2023-11-03",
+            arrival_time="10:30",
+            flight_train_number="EI 105",
+            pickup_arranged=False,
+            driver_name="",
+            driver_mobile=""
+        ),
+        Guest(
+            name="Chen Wei",
+            members_names="",
+            guest_mobile="+86 139 1234 5678",
+            pax=1,
+            hotel="The Grand Niyarra Resort",
+            room="601",
+            floor="6",
+            day1=True, day2=True, day3=True,
+            checked_in=True,
+            transport_needed=True,
+            transport_type="Airport Transport",
+            arrival_location="JFK Terminal 1",
+            arrival_date="2023-11-01",
+            arrival_time="16:45",
+            flight_train_number="CA 981",
+            pickup_arranged=True,
+            driver_name="Sam Smith",
+            driver_mobile="555-012-8888"
+        ),
+        Guest(
+            name="Aisha Khan",
+            members_names="",
+            guest_mobile="+971 50 123 4567",
+            pax=1,
+            hotel="Boutique Niyarra Downtown",
+            room="305",
+            floor="3",
+            day1=True, day2=True, day3=True,
+            checked_in=False,
+            transport_needed=True,
+            transport_type="Airport Transport",
+            arrival_location="JFK Terminal 4",
+            arrival_date="2023-11-01",
+            arrival_time="21:10",
+            flight_train_number="EK 201",
+            pickup_arranged=True,
+            driver_name="Sam Smith",
+            driver_mobile="555-012-8888"
+        )
+    ]
+
+    db.add_all(guests)
+    db.commit()
+    print("Database seeded with highly realistic scenarios successfully.")
+
+if __name__ == '__main__':
+    seed()
