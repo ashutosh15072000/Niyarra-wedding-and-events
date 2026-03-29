@@ -6,7 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Niyarra Guest Manager</title>
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
     <!-- Lucide Icons mapping -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <!-- SheetJS -->
@@ -18,32 +19,52 @@
     <div class="app-container">
         <header class="navbar">
             <div class="logo" style="display: flex; align-items: center; gap: 10px;">
-                <img src="logo.png" alt="Logo" class="nav-logo" style="height: 32px; width: auto; object-fit: contain; border-radius: 4px;" onerror="this.style.display='none'">
+                <img src="logo.png" alt="Logo" class="nav-logo"
+                    style="height: 32px; width: auto; object-fit: contain; border-radius: 4px;"
+                    onerror="this.style.display='none'">
                 <span>🏨 Niyarra Guest Manager</span>
             </div>
             <div class="hamburger-container">
                 <button id="btn-hamburger" class="btn btn-outline"><i data-lucide="menu"></i> Menu</button>
                 <div id="nav-dropdown" class="nav-dropdown hidden">
-                    <a href="/index.html" class="btn btn-outline w-full justify-start"><i data-lucide="plus"></i> Add Guest</a>
-                    <a href="/guests.html" class="btn btn-outline w-full justify-start"><i data-lucide="list"></i> Guest List</a>
-                    <a href="/modification.html" class="btn btn-outline w-full justify-start"><i data-lucide="edit"></i> Modifications</a>
-                    <a href="/transport-stats.html" class="btn btn-outline w-full justify-start"><i data-lucide="bar-chart"></i> Stats</a>
-                    <button id="btn-export" class="btn btn-outline w-full justify-start"><i data-lucide="download"></i> Export data</button>
-                    <button id="btn-login-modal" class="btn btn-primary w-full justify-start"><i data-lucide="user"></i> Admin Login</button>
-                    <button id="btn-logout" class="btn btn-outline w-full justify-start hidden"><i data-lucide="log-out"></i> Logout</button>
+                    <a href="/index.html" class="btn btn-outline w-full justify-start"><i data-lucide="plus"></i> Add
+                        Guest</a>
+                    <a href="/guests.html" class="btn btn-outline w-full justify-start"><i data-lucide="list"></i> Guest
+                        List</a>
+                    <a href="/modification.html" class="btn btn-outline w-full justify-start"><i data-lucide="edit"></i>
+                        Modifications</a>
+                    <a href="/message.html" class="btn btn-outline w-full justify-start"><i
+                            data-lucide="message-square"></i> Messages</a>
+                    <a href="/transport-stats.html" class="btn btn-outline w-full justify-start"><i
+                            data-lucide="bar-chart"></i> Stats</a>
+                    <button id="btn-export" class="btn btn-outline w-full justify-start"><i data-lucide="download"></i>
+                        Export data</button>
+                    <button id="btn-login-modal" class="btn btn-primary w-full justify-start"><i data-lucide="user"></i>
+                        Admin Login</button>
+                    <button id="btn-logout" class="btn btn-outline w-full justify-start hidden"><i
+                            data-lucide="log-out"></i> Logout</button>
                 </div>
             </div>
         </header>
 
         <main class="content">
-            <!-- Dashboard Stats -->
-
 
             <div class="main-layout" style="grid-template-columns: 1fr; max-width: 600px; margin: 0 auto;">
                 <!-- Add Guest Form -->
                 <aside class="sidebar-form">
                     <h2>Add New Guest</h2>
                     <form id="add-guest-form">
+                        <div class="form-group">
+                            <label>Guest Side *</label>
+                            <div class="form-side-selector" id="add-guest-side-selector">
+                                <label class="form-side-option active">
+                                    <input type="radio" name="guest_side" value="Bride" checked> Bride
+                                </label>
+                                <label class="form-side-option">
+                                    <input type="radio" name="guest_side" value="Groom"> Groom
+                                </label>
+                            </div>
+                        </div>
                         <div class="form-group">
                             <label>Guest Name *</label>
                             <input type="text" id="guest-name" required>
@@ -63,9 +84,14 @@
                             <label>Hotel Name</label>
                             <select id="guest-hotel" class="filter-select">
                                 <option value="">Select Hotel...</option>
-                                <option value="Jaypee">Jaypee</option>
-                                <option value="Taj">Taj</option>
-                                <option value="ITC">ITC</option>
+                                <option value="The Oberoi Amarvilas">The Oberoi Amarvilas</option>
+                                <option value="ITC Mughal">ITC Mughal</option>
+                                <option value="Jaypee Palace">Jaypee Palace</option>
+                                <option value="DoubleTree by Hilton">DoubleTree by Hilton</option>
+                                <option value="Courtyard by Marriott">Courtyard by Marriott</option>
+                                <option value="Trident Agra">Trident Agra</option>
+                                <option value="Tajview (IHCL SeleQtions)">Tajview (IHCL SeleQtions)</option>
+                                <option value="Hotel Taj Resorts">Hotel Taj Resorts</option>
                             </select>
                         </div>
                         <div class="form-row">
@@ -101,6 +127,7 @@
                         <div class="form-group checkbox-group">
                             <label>Attendance Days:</label>
                             <div style="display: flex; gap: 10px;">
+                                <label><input type="checkbox" id="guest-day0"> Day 0</label>
                                 <label><input type="checkbox" id="guest-day1"> Day 1</label>
                                 <label><input type="checkbox" id="guest-day2"> Day 2</label>
                                 <label><input type="checkbox" id="guest-day3"> Day 3</label>
@@ -113,7 +140,9 @@
                         </div>
                         <div class="form-group">
                             <label>Notes / Description</label>
-                            <textarea id="guest-description" rows="3" placeholder="Enter any specific requirements or notes..." style="width: 100%; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px;"></textarea>
+                            <textarea id="guest-description" rows="3"
+                                placeholder="Enter any specific requirements or notes..."
+                                style="width: 100%; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px;"></textarea>
                         </div>
 
 
@@ -198,11 +227,7 @@
                             </div>
                         </div>
 
-                        <div class="form-group checkbox-group"
-                            style="border-top: 1px solid var(--border); padding-top: 15px;">
-                            <input type="checkbox" id="guest-arrived">
-                            <label for="guest-arrived" style="font-weight: 600;">Client has Arrived?</label>
-                        </div>
+                        <!-- Check-in status removed from form as requested -->
                         <button type="submit" class="btn btn-primary w-full">Add Guest</button>
                     </form>
                 </aside>
@@ -243,8 +268,23 @@
             <form id="edit-guest-form">
                 <input type="hidden" id="edit-guest-id">
                 <div class="form-group">
+                    <label>Guest Side *</label>
+                    <div class="form-side-selector" id="edit-guest-side-selector">
+                        <label class="form-side-option">
+                            <input type="radio" name="edit_guest_side" value="Bride"> Bride
+                        </label>
+                        <label class="form-side-option">
+                            <input type="radio" name="edit_guest_side" value="Groom"> Groom
+                        </label>
+                    </div>
+                </div>
+                <div class="form-group">
                     <label>Guest Name</label>
                     <input type="text" id="edit-guest-name" required>
+                </div>
+                <div class="form-group">
+                    <label>Guest Mobile No.</label>
+                    <input type="text" id="edit-guest-mobile">
                 </div>
                 <div class="form-group">
                     <label>Pax</label>
@@ -252,7 +292,17 @@
                 </div>
                 <div class="form-group">
                     <label>Hotel Name</label>
-                    <input type="text" id="edit-guest-hotel">
+                    <select id="edit-guest-hotel" class="filter-select">
+                        <option value="">Select Hotel...</option>
+                        <option value="The Oberoi Amarvilas">The Oberoi Amarvilas</option>
+                        <option value="ITC Mughal">ITC Mughal</option>
+                        <option value="Jaypee Palace">Jaypee Palace</option>
+                        <option value="DoubleTree by Hilton">DoubleTree by Hilton</option>
+                        <option value="Courtyard by Marriott">Courtyard by Marriott</option>
+                        <option value="Trident Agra">Trident Agra</option>
+                        <option value="Tajview (IHCL SeleQtions)">Tajview (IHCL SeleQtions)</option>
+                        <option value="Hotel Taj Resorts">Hotel Taj Resorts</option>
+                    </select>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
@@ -261,16 +311,43 @@
                     </div>
                     <div class="form-group">
                         <label>Floor</label>
-                        <input type="text" id="edit-guest-floor">
+                        <select id="edit-guest-floor" class="filter-select">
+                            <option value="">Select Floor...</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                            <option value="6">6</option>
+                            <option value="7">7</option>
+                            <option value="8">8</option>
+                            <option value="9">9</option>
+                            <option value="10">10</option>
+                        </select>
                     </div>
+                </div>
+                <!-- Adding Driver details row in edit modal of index.html -->
+                <div class="form-group">
+                    <label>Driver Name</label>
+                    <input type="text" id="edit-guest-driver-name">
                 </div>
                 <div class="form-group">
                     <label>Driver Mobile No.</label>
                     <input type="text" id="edit-guest-driver">
                 </div>
+                <div class="form-group checkbox-group" style="padding-top: 10px;">
+                    <input type="checkbox" id="edit-guest-extra-bedding">
+                    <label for="edit-guest-extra-bedding">Requires Extra Bedding?</label>
+                </div>
+                <div class="form-group">
+                    <label>Description / Notes</label>
+                    <textarea id="edit-guest-description" rows="2"
+                        placeholder="Any special requests or details..."></textarea>
+                </div>
                 <div class="form-group checkbox-group">
                     <label>Attendance Days:</label>
                     <div style="display: flex; gap: 10px;">
+                        <label><input type="checkbox" id="edit-guest-day0"> Day 0</label>
                         <label><input type="checkbox" id="edit-guest-day1"> Day 1</label>
                         <label><input type="checkbox" id="edit-guest-day2"> Day 2</label>
                         <label><input type="checkbox" id="edit-guest-day3"> Day 3</label>
@@ -361,7 +438,7 @@
         </div>
     </div>
 
-    
+
 </body>
 
 </html>

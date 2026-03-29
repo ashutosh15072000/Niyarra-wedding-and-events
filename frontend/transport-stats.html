@@ -5,7 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Niyarra Transport Statistics</title>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -136,7 +137,7 @@
             font-weight: 900;
             color: var(--text-main);
             line-height: 1;
-            text-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            text-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
         }
 
         .kpi-card-total {
@@ -155,26 +156,36 @@
     <div class="app-container">
         <header class="navbar">
             <div class="logo" style="display: flex; align-items: center; gap: 10px;">
-                <img src="logo.png" alt="Logo" class="nav-logo" style="height: 32px; width: auto; object-fit: contain; border-radius: 4px;" onerror="this.style.display='none'">
+                <img src="logo.png" alt="Logo" class="nav-logo"
+                    style="height: 32px; width: auto; object-fit: contain; border-radius: 4px;"
+                    onerror="this.style.display='none'">
                 <span>🏨 Niyarra Guest Manager</span>
             </div>
-            <div class="hamburger-container">
-                <button id="btn-hamburger" class="btn btn-outline"><i data-lucide="menu"></i> Menu</button>
-                <div id="nav-dropdown" class="nav-dropdown hidden">
-                    <a href="/index.html" class="btn btn-outline w-full justify-start"><i data-lucide="plus"></i> Add Guest</a>
-                    <a href="/guests.html" class="btn btn-outline w-full justify-start"><i data-lucide="list"></i> Guest List</a>
-                    <a href="/modification.html" class="btn btn-outline w-full justify-start"><i data-lucide="edit"></i> Modifications</a>
-                    <a href="/transport-stats.html" class="btn btn-outline w-full justify-start"><i data-lucide="bar-chart"></i> Stats</a>
-                    <button id="btn-export" class="btn btn-outline w-full justify-start"><i data-lucide="download"></i> Export data</button>
-                    <button id="btn-login-modal" class="btn btn-primary w-full justify-start"><i data-lucide="user"></i> Admin Login</button>
-                    <button id="btn-logout" class="btn btn-outline w-full justify-start hidden"><i data-lucide="log-out"></i> Logout</button>
+                <div class="hamburger-container">
+                    <button id="btn-hamburger" class="btn btn-outline"><i data-lucide="menu"></i> Menu</button>
+                    <div id="nav-dropdown" class="nav-dropdown hidden">
+                        <a href="/index.html" class="btn btn-outline w-full justify-start"><i data-lucide="plus"></i>
+                            Add Guest</a>
+                        <a href="/guests.html" class="btn btn-outline w-full justify-start"><i data-lucide="list"></i>
+                            Guest List</a>
+                        <a href="/modification.html" class="btn btn-outline w-full justify-start"><i
+                                data-lucide="edit"></i> Modifications</a>
+                        <a href="/message.html" class="btn btn-outline w-full justify-start"><i
+                                data-lucide="message-square"></i> Messages</a>
+                        <a href="/transport-stats.html" class="btn btn-outline w-full justify-start"><i
+                                data-lucide="bar-chart"></i> Stats</a>
+                        <button id="btn-export" class="btn btn-outline w-full justify-start"><i
+                                data-lucide="download"></i> Export data</button>
+                        <button id="btn-login-modal" class="btn btn-primary w-full justify-start"><i
+                                data-lucide="user"></i> Admin Login</button>
+                        <button id="btn-logout" class="btn btn-outline w-full justify-start hidden"><i
+                                data-lucide="log-out"></i> Logout</button>
+                    </div>
                 </div>
-            </div>
         </header>
 
         <main class="content">
-            <div class="table-header" style="text-align: center; margin-bottom: 20px; margin-top: 20px;">
-                <h2>
+                <h2 style="display: flex; justify-content: center; align-items: center; gap: 15px;">
                     <select id="stats-type-selector"
                         style="font-size: 1.5rem; font-weight: 700; text-align: center; border: 1px solid var(--border); border-radius: 12px; padding: 12px 24px; background: var(--card-bg); backdrop-filter: var(--glass-blur); cursor: pointer; color: var(--text-main); box-shadow: 0 10px 40px rgba(0,0,0,0.3); outline: none;">
                         <option value="transportation">Transportation Arrival Analytics</option>
@@ -188,25 +199,42 @@
             <div id="transportation-filters" class="filter-bar"
                 style="max-width: 800px; margin-left: auto; margin-right: auto; margin-bottom: 20px;">
                 <div class="form-group" style="margin-bottom: 0; flex: 1;">
+                    <select class="filter-select global-side-selector" title="Global Side Filter">
+                        <option value="Bride">Bride Side</option>
+                        <option value="Groom">Groom Side</option>
+                    </select>
+                    <small style="display:block;font-size:11px;color:#64748b;margin-top:4px;">Side Filter</small>
+                </div>
+                <div class="form-group" style="margin-bottom: 0; flex: 1;">
                     <select id="stats-transport-mode" class="filter-select" title="Select Direction">
                         <option value="arrivals">Arrivals</option>
                         <option value="departures">Departures</option>
                     </select>
-                    <small style="display:block;font-size:11px;color:#64748b;margin-top:4px;">1. Select Direction</small>
+                    <small style="display:block;font-size:11px;color:#64748b;margin-top:4px;">1. Select
+                        Direction</small>
                 </div>
                 <div class="form-group" style="margin-bottom: 0; flex: 1;">
                     <select id="stats-filter-date" class="filter-select" title="Select Date">
                         <option value="">All Dates</option>
                     </select>
-                    <small style="display:block;font-size:11px;color:#64748b;margin-top:4px;">2. Select Specific Date</small>
+                    <small style="display:block;font-size:11px;color:#64748b;margin-top:4px;">2. Select Specific
+                        Date</small>
                 </div>
             </div>
 
             <div id="hotel-filters" class="filter-bar"
                 style="display: none; max-width: 800px; margin-left: auto; margin-right: auto; margin-bottom: 20px;">
-                <div class="form-group" style="margin-bottom: 0;">
+                <div class="form-group" style="margin-bottom: 0; flex: 1;">
+                    <select class="filter-select global-side-selector" title="Global Side Filter">
+                        <option value="Bride">Bride Side</option>
+                        <option value="Groom">Groom Side</option>
+                    </select>
+                    <small style="display:block;font-size:11px;color:#64748b;margin-top:4px;">Side Filter</small>
+                </div>
+                <div class="form-group" style="margin-bottom: 0; flex: 1;">
                     <select id="stats-filter-day" class="filter-select" title="Filter by Event Day">
                         <option value="">All Event Days</option>
+                        <option value="day0">Day 0 (D0)</option>
                         <option value="day1">Day 1 (D1)</option>
                         <option value="day2">Day 2 (D2)</option>
                         <option value="day3">Day 3 (D3)</option>

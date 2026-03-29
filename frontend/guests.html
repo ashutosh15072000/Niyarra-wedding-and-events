@@ -5,7 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Niyarra Guest List</title>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link rel="stylesheet" href="style.css?v=2">
@@ -15,25 +16,43 @@
     <div class="app-container">
         <header class="navbar">
             <div class="logo" style="display: flex; align-items: center; gap: 10px;">
-                <img src="logo.png" alt="Logo" class="nav-logo" style="height: 32px; width: auto; object-fit: contain; border-radius: 4px;" onerror="this.style.display='none'">
+                <img src="logo.png" alt="Logo" class="nav-logo"
+                    style="height: 32px; width: auto; object-fit: contain; border-radius: 4px;"
+                    onerror="this.style.display='none'">
                 <span>🏨 Niyarra Guest Manager</span>
             </div>
             <div class="hamburger-container">
                 <button id="btn-hamburger" class="btn btn-outline"><i data-lucide="menu"></i> Menu</button>
                 <div id="nav-dropdown" class="nav-dropdown hidden">
-                    <a href="/index.html" class="btn btn-outline w-full justify-start"><i data-lucide="plus"></i> Add Guest</a>
-                    <a href="/guests.html" class="btn btn-outline w-full justify-start"><i data-lucide="list"></i> Guest List</a>
-                    <a href="/modification.html" class="btn btn-outline w-full justify-start"><i data-lucide="edit"></i> Modifications</a>
-                    <a href="/transport-stats.html" class="btn btn-outline w-full justify-start"><i data-lucide="bar-chart"></i> Stats</a>
-                    <button id="btn-export" class="btn btn-outline w-full justify-start"><i data-lucide="download"></i> Export data</button>
-                    <button id="btn-login-modal" class="btn btn-primary w-full justify-start"><i data-lucide="user"></i> Admin Login</button>
-                    <button id="btn-logout" class="btn btn-outline w-full justify-start hidden"><i data-lucide="log-out"></i> Logout</button>
+                    <a href="/index.html" class="btn btn-outline w-full justify-start"><i data-lucide="plus"></i> Add
+                        Guest</a>
+                    <a href="/guests.html" class="btn btn-outline w-full justify-start"><i data-lucide="list"></i> Guest
+                        List</a>
+                    <a href="/modification.html" class="btn btn-outline w-full justify-start"><i data-lucide="edit"></i>
+                        Modifications</a>
+                    <a href="/message.html" class="btn btn-outline w-full justify-start"><i
+                            data-lucide="message-square"></i> Messages</a>
+                    <a href="/transport-stats.html" class="btn btn-outline w-full justify-start"><i
+                            data-lucide="bar-chart"></i> Stats</a>
+                    <button id="btn-export" class="btn btn-outline w-full justify-start"><i data-lucide="download"></i>
+                        Export data</button>
+                    <button id="btn-login-modal" class="btn btn-primary w-full justify-start"><i data-lucide="user"></i>
+                        Admin Login</button>
+                    <button id="btn-logout" class="btn btn-outline w-full justify-start hidden"><i
+                            data-lucide="log-out"></i> Logout</button>
                 </div>
             </div>
         </header>
 
         <main class="content">
+
             <div class="filter-bar">
+                <div class="form-group" style="margin-bottom: 0;">
+                    <select id="global-side-selector" class="filter-select global-side-selector">
+                        <option value="Bride">Bride Side</option>
+                        <option value="Groom">Groom Side</option>
+                    </select>
+                </div>
                 <div class="form-group" style="margin-bottom: 0;">
                     <input type="text" id="filter-name" placeholder="Search by name...">
                 </div>
@@ -47,6 +66,7 @@
                 <div class="form-group" style="margin-bottom: 0;">
                     <select id="filter-day" class="filter-select">
                         <option value="all">All Days</option>
+                        <option value="0">Day 0</option>
                         <option value="1">Day 1</option>
                         <option value="2">Day 2</option>
                         <option value="3">Day 3</option>
@@ -63,6 +83,7 @@
                         <thead>
                             <tr>
                                 <th>Name</th>
+                                <th>Side</th>
                                 <th>Pax</th>
                                 <th>Guest Mobile</th>
                                 <th>Hotel</th>
@@ -117,6 +138,17 @@
             <form id="edit-guest-form">
                 <input type="hidden" id="edit-guest-id">
                 <div class="form-group">
+                    <label>Guest Side *</label>
+                    <div class="form-side-selector" id="edit-guest-side-selector">
+                        <label class="form-side-option">
+                            <input type="radio" name="edit_guest_side" value="Bride"> Bride
+                        </label>
+                        <label class="form-side-option">
+                            <input type="radio" name="edit_guest_side" value="Groom"> Groom
+                        </label>
+                    </div>
+                </div>
+                <div class="form-group">
                     <label>Guest Name</label>
                     <input type="text" id="edit-guest-name" required>
                 </div>
@@ -135,9 +167,14 @@
                     <label>Hotel Name</label>
                     <select id="edit-guest-hotel" class="filter-select">
                         <option value="">Select Hotel...</option>
-                        <option value="Jaypee">Jaypee</option>
-                        <option value="Taj">Taj</option>
-                        <option value="ITC">ITC</option>
+                        <option value="The Oberoi Amarvilas">The Oberoi Amarvilas</option>
+                        <option value="ITC Mughal">ITC Mughal</option>
+                        <option value="Jaypee Palace">Jaypee Palace</option>
+                        <option value="DoubleTree by Hilton">DoubleTree by Hilton</option>
+                        <option value="Courtyard by Marriott">Courtyard by Marriott</option>
+                        <option value="Trident Agra">Trident Agra</option>
+                        <option value="Tajview (IHCL SeleQtions)">Tajview (IHCL SeleQtions)</option>
+                        <option value="Hotel Taj Resorts">Hotel Taj Resorts</option>
                     </select>
                 </div>
                 <div class="form-row">
@@ -173,6 +210,7 @@
                 <div class="form-group checkbox-group">
                     <label>Attendance Days:</label>
                     <div style="display: flex; gap: 10px;">
+                        <label><input type="checkbox" id="edit-guest-day0"> Day 0</label>
                         <label><input type="checkbox" id="edit-guest-day1"> Day 1</label>
                         <label><input type="checkbox" id="edit-guest-day2"> Day 2</label>
                         <label><input type="checkbox" id="edit-guest-day3"> Day 3</label>
@@ -263,7 +301,7 @@
         </div>
     </div>
 
-    
+
 </body>
 
 </html>

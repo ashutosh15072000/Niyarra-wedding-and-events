@@ -1,53 +1,79 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Niyarra Guest List</title>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link rel="stylesheet" href="style.css?v=5">
 </head>
+
 <body>
     <div class="app-container">
         <header class="navbar">
             <div class="logo" style="display: flex; align-items: center; gap: 10px;">
-                <img src="logo.png" alt="Logo" class="nav-logo" style="height: 32px; width: auto; object-fit: contain; border-radius: 4px;" onerror="this.style.display='none'">
+                <img src="logo.png" alt="Logo" class="nav-logo"
+                    style="height: 32px; width: auto; object-fit: contain; border-radius: 4px;"
+                    onerror="this.style.display='none'">
                 <span>🏨 Niyarra Guest Manager</span>
             </div>
             <div class="hamburger-container">
                 <button id="btn-hamburger" class="btn btn-outline"><i data-lucide="menu"></i> Menu</button>
                 <div id="nav-dropdown" class="nav-dropdown hidden">
-                    <a href="/index.html" class="btn btn-outline w-full justify-start"><i data-lucide="plus"></i> Add Guest</a>
-                    <a href="/guests.html" class="btn btn-outline w-full justify-start"><i data-lucide="list"></i> Guest List</a>
-                    <a href="/modification.html" class="btn btn-outline w-full justify-start"><i data-lucide="edit"></i> Modifications</a>
-                    <a href="/transport-stats.html" class="btn btn-outline w-full justify-start"><i data-lucide="bar-chart"></i> Stats</a>
-                    <button id="btn-export" class="btn btn-outline w-full justify-start"><i data-lucide="download"></i> Export data</button>
-                    <button id="btn-login-modal" class="btn btn-primary w-full justify-start"><i data-lucide="user"></i> Admin Login</button>
-                    <button id="btn-logout" class="btn btn-outline w-full justify-start hidden"><i data-lucide="log-out"></i> Logout</button>
+                    <a href="/index.html" class="btn btn-outline w-full justify-start"><i data-lucide="plus"></i> Add
+                        Guest</a>
+                    <a href="/guests.html" class="btn btn-outline w-full justify-start"><i data-lucide="list"></i> Guest
+                        List</a>
+                    <a href="/modification.html" class="btn btn-outline w-full justify-start"><i data-lucide="edit"></i>
+                        Modifications</a>
+                    <a href="/message.html" class="btn btn-outline w-full justify-start"><i
+                            data-lucide="message-square"></i> Messages</a>
+                    <a href="/transport-stats.html" class="btn btn-outline w-full justify-start"><i
+                            data-lucide="bar-chart"></i> Stats</a>
+                    <button id="btn-export" class="btn btn-outline w-full justify-start"><i data-lucide="download"></i>
+                        Export data</button>
+                    <button id="btn-login-modal" class="btn btn-primary w-full justify-start"><i data-lucide="user"></i>
+                        Admin Login</button>
+                    <button id="btn-logout" class="btn btn-outline w-full justify-start hidden"><i
+                            data-lucide="log-out"></i> Logout</button>
                 </div>
             </div>
         </header>
 
         <main class="content">
+
             <div class="filter-bar" style="margin-bottom: 20px;">
-                <h3 style="margin-top: 0; margin-bottom: 15px; font-size: 14px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;">1. Select Active Department Role</h3>
-                <select id="department-role" class="filter-select" style="width: 100%; max-width: 400px; padding: 12px; font-size: 16px; font-weight: 600;">
+                <h3
+                    style="margin-top: 0; margin-bottom: 15px; font-size: 14px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;">
+                    1. Select Active Department Role</h3>
+                <select id="department-role" class="filter-select"
+                    style="width: 100%; max-width: 400px; padding: 12px; font-size: 16px; font-weight: 600;">
                     <option value="rsvp">RSVP Department (Master Edit)</option>
                     <option value="hotel">Hotel Department</option>
                     <option value="transport">Transport / Logistics Department</option>
                 </select>
             </div>
 
-            <div class="filter-bar" style="margin-bottom: 15px;">
-                <input type="text" id="filter-name" placeholder="Search by name..." class="filter-input">
-                <select id="filter-status" class="filter-select">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px; flex-wrap: nowrap; overflow-x: auto;">
+                <select id="global-side-selector" class="filter-select global-side-selector"
+                    style="flex-shrink: 0; width: 140px; padding: 9px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(24,24,27,0.98); color: #fff; font-size: 0.875rem; cursor: pointer;">
+                    <option value="Bride">Bride Side</option>
+                    <option value="Groom">Groom Side</option>
+                </select>
+                <input type="text" id="filter-name" placeholder="Search by name..."
+                    style="flex: 1; min-width: 140px; padding: 9px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(24,24,27,0.98); color: #fff; font-size: 0.875rem;">
+                <select id="filter-status"
+                    style="flex-shrink: 0; width: 140px; padding: 9px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(24,24,27,0.98); color: #fff; font-size: 0.875rem; cursor: pointer;">
                     <option value="all">All Statuses</option>
                     <option value="arrived">Arrived</option>
                     <option value="pending">Pending</option>
                 </select>
-                <select id="filter-day" class="filter-select">
+                <select id="filter-day"
+                    style="flex-shrink: 0; width: 120px; padding: 9px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(24,24,27,0.98); color: #fff; font-size: 0.875rem; cursor: pointer;">
                     <option value="all">All Days</option>
                     <option value="0">Day 0</option>
                     <option value="1">Day 1</option>
@@ -55,6 +81,7 @@
                     <option value="3">Day 3</option>
                 </select>
             </div>
+
 
             <section class="table-section" style="margin-top: 20px;">
                 <div class="table-header">
@@ -65,6 +92,7 @@
                         <thead>
                             <tr>
                                 <th>Name</th>
+                                <th>Side</th>
                                 <th>Pax</th>
                                 <th>Guest Mobile</th>
                                 <th>Hotel</th>
@@ -120,6 +148,17 @@
             <form id="edit-guest-form">
                 <input type="hidden" id="edit-guest-id">
                 <div class="form-group">
+                    <label>Guest Side *</label>
+                    <div class="form-side-selector" id="edit-guest-side-selector">
+                        <label class="form-side-option">
+                            <input type="radio" name="edit_guest_side" value="Bride"> Bride
+                        </label>
+                        <label class="form-side-option">
+                            <input type="radio" name="edit_guest_side" value="Groom"> Groom
+                        </label>
+                    </div>
+                </div>
+                <div class="form-group">
                     <label>Guest Name</label>
                     <input type="text" id="edit-guest-name">
                 </div>
@@ -131,19 +170,21 @@
                     <label>Number of People</label>
                     <input type="number" id="edit-guest-pax" min="1">
                 </div>
-                <div id="edit-family-members-container" style="background: rgba(255, 255, 255, 0.05); padding: 15px; border-radius: 10px; margin-bottom: 15px; border: 1px solid var(--border); display: none;"></div>
+                <div id="edit-family-members-container"
+                    style="background: rgba(255, 255, 255, 0.05); padding: 15px; border-radius: 10px; margin-bottom: 15px; border: 1px solid var(--border); display: none;">
+                </div>
                 <div class="form-group" id="edit-hotel-name-row">
                     <label>Hotel Name</label>
                     <select id="edit-guest-hotel" class="filter-select">
                         <option value="">Select Hotel...</option>
-                        <option value="Jaypee Palace">Jaypee Palace</option>
-                        <option value="Taj Convention Centre">Taj Convention Centre</option>
-                        <option value="ITC Mughal">ITC Mughal</option>
                         <option value="The Oberoi Amarvilas">The Oberoi Amarvilas</option>
+                        <option value="ITC Mughal">ITC Mughal</option>
+                        <option value="Jaypee Palace">Jaypee Palace</option>
+                        <option value="DoubleTree by Hilton">DoubleTree by Hilton</option>
                         <option value="Courtyard by Marriott">Courtyard by Marriott</option>
                         <option value="Trident Agra">Trident Agra</option>
-                        <option value="DoubleTree by Hilton">DoubleTree by Hilton</option>
-                        <option value="Radisson Hotel">Radisson Hotel</option>
+                        <option value="Tajview (IHCL SeleQtions)">Tajview (IHCL SeleQtions)</option>
+                        <option value="Hotel Taj Resorts">Hotel Taj Resorts</option>
                     </select>
                 </div>
                 <div class="form-row" id="edit-hotel-row">
@@ -174,7 +215,8 @@
                 </div>
                 <div class="form-group" id="edit-description-row">
                     <label>Description / Notes</label>
-                    <textarea id="edit-guest-description" rows="2" placeholder="Any special requests or details..."></textarea>
+                    <textarea id="edit-guest-description" rows="2"
+                        placeholder="Any special requests or details..."></textarea>
                 </div>
                 <div class="form-group" id="edit-driver-name-row">
                     <label>Driver Name</label>
@@ -195,12 +237,16 @@
                 </div>
 
                 <!-- Logistics & Transportation Section -->
-                <div class="form-group checkbox-group" style="margin-top: 15px; border-top: 1px solid #e2e8f0; padding-top: 15px;">
-                    <input type="checkbox" id="edit-guest-transport-needed" onchange="document.getElementById('edit-transport-details').style.display = this.checked ? 'block' : 'none'">
-                    <label for="edit-guest-transport-needed" style="font-weight: 600;">Needs Transport / Logistics?</label>
+                <div class="form-group checkbox-group"
+                    style="margin-top: 15px; border-top: 1px solid #e2e8f0; padding-top: 15px;">
+                    <input type="checkbox" id="edit-guest-transport-needed"
+                        onchange="document.getElementById('edit-transport-details').style.display = this.checked ? 'block' : 'none'">
+                    <label for="edit-guest-transport-needed" style="font-weight: 600;">Needs Transport /
+                        Logistics?</label>
                 </div>
-                
-                <div id="edit-transport-details" style="display: none; background: rgba(0, 0, 0, 0.2); padding: 15px; border-radius: 10px; margin-bottom: 15px; border: 1px solid var(--border);">
+
+                <div id="edit-transport-details"
+                    style="display: none; background: rgba(0, 0, 0, 0.2); padding: 15px; border-radius: 10px; margin-bottom: 15px; border: 1px solid var(--border);">
                     <div class="form-group">
                         <label>Transport Type</label>
                         <select id="edit-guest-transport-type" class="filter-select">
@@ -233,10 +279,12 @@
                         <label for="edit-guest-pickup-arranged">Pick-up Arranged?</label>
                     </div>
                     <div class="form-group checkbox-group">
-                        <input type="checkbox" id="edit-guest-dropoff-arranged" onchange="document.getElementById('edit-dropoff-details').style.display = this.checked ? 'block' : 'none'">
+                        <input type="checkbox" id="edit-guest-dropoff-arranged"
+                            onchange="document.getElementById('edit-dropoff-details').style.display = this.checked ? 'block' : 'none'">
                         <label for="edit-guest-dropoff-arranged">Drop-off Needed?</label>
                     </div>
-                    <div id="edit-dropoff-details" style="display: none; padding-left: 20px; border-left: 2px solid var(--primary); margin-bottom: 10px;">
+                    <div id="edit-dropoff-details"
+                        style="display: none; padding-left: 20px; border-left: 2px solid var(--primary); margin-bottom: 10px;">
                         <div class="form-group">
                             <label>Departure Transport Type</label>
                             <select id="edit-guest-departure-transport-type" class="filter-select">
@@ -248,7 +296,8 @@
                         </div>
                         <div class="form-group">
                             <label>Departure Location</label>
-                            <input type="text" id="edit-guest-departure-location" placeholder="e.g. IGI Airport Terminal 3">
+                            <input type="text" id="edit-guest-departure-location"
+                                placeholder="e.g. IGI Airport Terminal 3">
                         </div>
                         <div class="form-row">
                             <div class="form-group">
@@ -267,23 +316,30 @@
                     </div>
                 </div>
                 <div style="display: flex; gap: 15px; margin-top: 15px;">
-                    <button type="button" class="btn btn-outline w-full" onclick="document.getElementById('edit-modal').classList.add('hidden')">Cancel</button>
+                    <button type="button" class="btn btn-outline w-full"
+                        onclick="document.getElementById('edit-modal').classList.add('hidden')">Cancel</button>
                     <button type="submit" class="btn btn-primary w-full">Save Changes</button>
                 </div>
             </form>
         </div>
-    <!-- Note Modal -->
-    <div id="note-modal" class="modal hidden">
-        <div class="modal-content" style="max-width: 450px;">
-            <div class="modal-header">
-                <h2>Guest Notes</h2>
-                <button class="close-modal" onclick="document.getElementById('note-modal').classList.add('hidden')"><i data-lucide="x"></i></button>
+        <!-- Note Modal -->
+        <div id="note-modal" class="modal hidden">
+            <div class="modal-content" style="max-width: 450px;">
+                <div class="modal-header">
+                    <h2>Guest Notes</h2>
+                    <button class="close-modal"
+                        onclick="document.getElementById('note-modal').classList.add('hidden')"><i
+                            data-lucide="x"></i></button>
+                </div>
+                <div id="note-text"
+                    style="font-size: 14px; line-height: 1.5; white-space: pre-wrap; color: var(--text-main); margin-bottom: 20px;">
+                </div>
+                <button class="btn btn-outline w-full"
+                    onclick="document.getElementById('note-modal').classList.add('hidden')">Close</button>
             </div>
-            <div id="note-text" style="font-size: 14px; line-height: 1.5; white-space: pre-wrap; color: var(--text-main); margin-bottom: 20px;"></div>
-            <button class="btn btn-outline w-full" onclick="document.getElementById('note-modal').classList.add('hidden')">Close</button>
         </div>
-    </div>
 
-    <script src="app_v2.js?v=2024.final"></script>
+        <script src="app_v2.js?v=2024.final"></script>
 </body>
+
 </html>

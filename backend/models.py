@@ -37,6 +37,20 @@ class Guest(Base):
     departure_date = Column(String)
     departure_time = Column(String)
     departure_flight_train_number = Column(String)
+    
+    side = Column(String, nullable=True, default="Bride")
+    
+class ScheduledMessage(Base):
+    __tablename__ = "scheduled_messages"
+    id = Column(Integer, primary_key=True, index=True)
+    guest_id = Column(Integer)
+    guest_name = Column(String)
+    guest_phone = Column(String)
+    message = Column(String)
+    purpose = Column(String, nullable=True)
+    schedule_date = Column(String)
+    schedule_time = Column(String)
+    status = Column(String, default="Pending") # Pending, Sent, Failed
 
 class User(Base):
     __tablename__ = "users"

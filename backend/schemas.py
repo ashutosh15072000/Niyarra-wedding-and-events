@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List
 
 class GuestBase(BaseModel):
     name: str
@@ -35,6 +35,7 @@ class GuestBase(BaseModel):
     departure_date: Optional[str] = None
     departure_time: Optional[str] = None
     departure_flight_train_number: Optional[str] = None
+    side: Optional[str] = "Bride"
 
 class GuestCreate(GuestBase):
     pass
@@ -54,3 +55,32 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     username: Optional[str] = None
+
+class ScheduledMessageBase(BaseModel):
+    guest_id: int
+    guest_name: str
+    guest_phone: str
+    message: str
+    purpose: Optional[str] = None
+    schedule_date: str
+    schedule_time: str
+
+class ScheduledMessageCreate(ScheduledMessageBase):
+    pass
+
+class ScheduledMessageUpdate(BaseModel):
+    message: Optional[str] = None
+    purpose: Optional[str] = None
+    schedule_date: Optional[str] = None
+    schedule_time: Optional[str] = None
+    status: Optional[str] = None
+
+class ScheduledMessageRead(ScheduledMessageBase):
+    id: int
+    status: str
+
+    class Config:
+        from_attributes = True
+class BulkMessageUpdate(BaseModel):
+    msg_ids: List[int]
+    msg_update: ScheduledMessageUpdate

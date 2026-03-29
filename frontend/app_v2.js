@@ -6,6 +6,64 @@ const tbody = document.getElementById('guest-tbody');
 const totalPaxEl = document.getElementById('total-pax');
 const arrivedPaxEl = document.getElementById('arrived-pax');
 const addForm = document.getElementById('add-guest-form');
+let currentSide = localStorage.getItem('niyarra_current_side') || 'Bride';
+
+// Initialize global side selector UI
+function initSideSelector() {
+    const selectors = document.querySelectorAll('.global-side-selector');
+    if (selectors.length === 0) return;
+
+    selectors.forEach(selector => {
+        selector.value = currentSide;
+
+        // Remove existing listener if any (to avoid duplicates)
+        selector.removeEventListener('change', handleSideChange);
+        selector.addEventListener('change', handleSideChange);
+    });
+}
+
+function handleSideChange(e) {
+    currentSide = e.target.value;
+    localStorage.setItem('niyarra_current_side', currentSide);
+
+    // Sync all other selectors on the page
+    document.querySelectorAll('.global-side-selector').forEach(s => {
+        s.value = currentSide;
+    });
+
+    if (document.getElementById('guest-tbody')) {
+        renderTable(guestsList);
+    }
+    if (document.getElementById('transport-tbody')) {
+        renderTransportTable(guestsList);
+    }
+    if (document.getElementById('transportChart')) {
+        fetchGuests();
+    }
+    if (document.getElementById('messages-tbody')) {
+        if (typeof initMessagePage === 'function') initMessagePage();
+    }
+}
+
+// Side selector for forms (Add/Edit)
+function initFormSideSelectors() {
+    document.querySelectorAll('.form-side-selector').forEach(selector => {
+        const options = selector.querySelectorAll('.form-side-option');
+        options.forEach(opt => {
+            opt.addEventListener('click', () => {
+                options.forEach(o => o.classList.remove('active'));
+                opt.classList.add('active');
+                const radio = opt.querySelector('input[type="radio"]');
+                if (radio) radio.checked = true;
+            });
+        });
+    });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    initSideSelector();
+    initFormSideSelectors();
+});
 
 // Auth Flow
 function getToken() { return sessionStorage.getItem('niyarra_admin_auth'); }
@@ -33,10 +91,10 @@ function updateAuthUI() {
     if (!token) {
         const mainContent = document.querySelector('.content');
         if (mainContent) mainContent.style.display = 'none';
-        
+
         const hamburger = document.querySelector('.hamburger-container');
         if (hamburger) hamburger.style.display = 'none';
-        
+
         const loginModal = document.getElementById('login-modal');
         if (loginModal) {
             loginModal.classList.remove('hidden');
@@ -45,9 +103,9 @@ function updateAuthUI() {
         }
     } else {
         const blm = document.getElementById('btn-login-modal');
-        if(blm) blm.classList.add('hidden');
+        if (blm) blm.classList.add('hidden');
         const blo = document.getElementById('btn-logout');
-        if(blo) blo.classList.remove('hidden');
+        if (blo) blo.classList.remove('hidden');
         document.querySelectorAll('.admin-col').forEach(el => el.classList.remove('hidden'));
     }
 }
@@ -112,7 +170,8 @@ async function handleAddGuest(e) {
         departure_location: document.getElementById('guest-departure-location')?.value || "",
         departure_flight_train_number: document.getElementById('guest-departure-flight-train')?.value || "",
         departure_date: document.getElementById('guest-departure-date')?.value || "",
-        departure_time: document.getElementById('guest-departure-time')?.value || ""
+        departure_time: document.getElementById('guest-departure-time')?.value || "",
+        side: document.querySelector('input[name="guest_side"]:checked')?.value || "Bride"
     };
     try {
         const res = await fetch(`${API_URL}/guests`, {
@@ -128,7 +187,7 @@ async function handleAddGuest(e) {
         }
         addForm.reset();
         fetchGuests();
-    } catch (e) { 
+    } catch (e) {
         console.error('Network Error:', e);
         alert(`Network error: ${e.message}`);
     }
@@ -182,6 +241,7 @@ function renderTable(data) {
     const fDay = filterDayEl ? filterDayEl.value : 'all';
 
     const filtered = data.filter(g => {
+        if (g.side && g.side !== currentSide) return false;
         if (fName && !g.name.toLowerCase().includes(fName)) return false;
         if (fStatus === 'arrived' && !g.checked_in) return false;
         if (fStatus === 'pending' && g.checked_in) return false;
@@ -259,6 +319,7 @@ function renderTable(data) {
 
         tr.innerHTML = `
             <td>${nameHtml}</td>
+            <td><span class="side-badge ${g.side === 'Groom' ? 'side-groom' : 'side-bride'}">${g.side || 'Bride'}</span></td>
             <td>${g.pax}</td>
             <td>${g.guest_mobile || '-'}</td>
             <td>${g.hotel || '-'}</td>
@@ -312,6 +373,7 @@ function renderTransportTable(data) {
     let transportGuests = data.filter(g => g.transport_needed || g.arrival_location || g.departure_location);
 
     transportGuests = transportGuests.filter(g => {
+        if (g.side && g.side !== currentSide) return false;
         if (fName && !g.name.toLowerCase().includes(fName)) return false;
         if (fArrDate && g.arrival_date !== fArrDate) return false;
         if (fArrTime && g.arrival_time !== fArrTime) return false;
@@ -382,6 +444,7 @@ function renderTransportTable(data) {
                 <div style="font-weight: 500;">${g.name}</div>
                 ${membersHtml}
             </td>
+            <td><span class="side-badge ${g.side === 'Groom' ? 'side-groom' : 'side-bride'}">${g.side || 'Bride'}</span></td>
             <td>${g.guest_mobile || '-'}</td>
             <td>${g.driver_name || '-'}</td>
             <td>${g.driver_mobile || '-'}</td>
@@ -431,7 +494,7 @@ function populateTableDropdowns(data) {
 function populateStatsDropdowns(data) {
     const modeEl = document.getElementById('stats-transport-mode');
     if (!modeEl) return;
-    
+
     // Default to 'arrivals' if not set
     const mode = modeEl.value || 'arrivals';
     populateStatsDateDropdown(data, mode);
@@ -444,14 +507,14 @@ function renderTransportStats(data) {
     // View Cleanup: Ensure chart is shown and hotel grid is hidden
     const chartContainer = document.querySelector('.chart-container');
     if (chartContainer) chartContainer.style.display = 'block';
-    
+
     const gridContainer = document.getElementById('hotel-block-grid');
     if (gridContainer) gridContainer.style.display = 'none';
 
     // Hierarchical filters
     const statsTransportModeEl = document.getElementById('stats-transport-mode');
     const statsFilterDateEl = document.getElementById('stats-filter-date');
-    
+
     const modeVal = statsTransportModeEl ? statsTransportModeEl.value : 'arrivals';
     const selectedDate = statsFilterDateEl ? statsFilterDateEl.value : '';
 
@@ -466,6 +529,7 @@ function renderTransportStats(data) {
         thead.innerHTML = `
             <tr>
                 <th>Name</th>
+                <th>Side</th>
                 <th>Pax</th>
                 <th>Hotel</th>
                 <th>Days Coming</th>
@@ -478,8 +542,8 @@ function renderTransportStats(data) {
         `;
     }
 
-    // Filter to guests who have a time for the current mode
-    let filteredGuests = data.filter(g => g[timeField]);
+    // Filter to guests who have a time for the current mode and match side
+    let filteredGuests = data.filter(g => g[timeField] && (!g.side || g.side === currentSide));
 
     // Apply specific date filter if a date is selected
     if (selectedDate) {
@@ -688,7 +752,7 @@ function renderTransportStats(data) {
             detailsContainer.style.display = 'block';
             detailsContainer.style.opacity = 1;
             detailsContainer.style.transform = "translateY(0)";
-            
+
             if (typeof lucide !== 'undefined') lucide.createIcons();
         }
     } else {
@@ -709,8 +773,8 @@ function renderHotelBlockGrid(data) {
     // Apply Day filter
     const fDayEl = document.getElementById('stats-filter-day');
     const fDay = fDayEl ? fDayEl.value : '';
-    
-    let filteredGuests = data;
+
+    let filteredGuests = data.filter(g => !g.side || g.side === currentSide);
     if (fDay === 'day0') filteredGuests = filteredGuests.filter(g => g.day0);
     else if (fDay === 'day1') filteredGuests = filteredGuests.filter(g => g.day1);
     else if (fDay === 'day2') filteredGuests = filteredGuests.filter(g => g.day2);
@@ -733,6 +797,7 @@ function renderHotelBlockGrid(data) {
         thead.innerHTML = `
             <tr>
                 <th>Name</th>
+                <th>Side</th>
                 <th>Family Members</th>
                 <th>Mobile</th>
                 <th>Pax</th>
@@ -782,7 +847,7 @@ function renderHotelBlockGrid(data) {
     blockNames.forEach(blockName => {
         const floors = blocks[blockName];
         const floorNames = Object.keys(floors).sort();
-        
+
         // Totals for block header
         const allGuests = floorNames.flatMap(f => floors[f]);
         const totalPax = allGuests.reduce((s, g) => s + g.pax, 0);
@@ -814,10 +879,10 @@ function renderHotelBlockGrid(data) {
                     </div>
                 </div>
             </div>
-            <div style="padding: 4px 0;" class="floor-list-${blockName.replace(/[^a-zA-Z0-9]/g,'-')}"></div>
+            <div style="padding: 4px 0;" class="floor-list-${blockName.replace(/[^a-zA-Z0-9]/g, '-')}"></div>
         `;
 
-        const floorList = blockCard.querySelector(`.floor-list-${blockName.replace(/[^a-zA-Z0-9]/g,'-')}`);
+        const floorList = blockCard.querySelector(`.floor-list-${blockName.replace(/[^a-zA-Z0-9]/g, '-')}`);
 
         floorNames.forEach((floorName, idx) => {
             const guests = floors[floorName];
@@ -884,6 +949,7 @@ function showHotelRoster(guests, title, detailsContainer) {
             tbody.innerHTML += `
                 <tr class="hover-row">
                     <td style="font-weight: 700; color: var(--text-main); padding: 16px 12px;">${g.name}</td>
+                    <td><span class="side-badge ${g.side === 'Groom' ? 'side-groom' : 'side-bride'}">${g.side || 'Bride'}</span></td>
                     <td style="font-size: 0.85em; color: var(--text-muted);">${g.members_names || '<span class="empty-cell">-</span>'}</td>
                     <td style="color: var(--text-main);">${g.guest_mobile || '<span class="empty-cell">-</span>'}</td>
                     <td><span class="pax-badge">${g.pax}</span></td>
@@ -911,8 +977,23 @@ function showHotelRoster(guests, title, detailsContainer) {
 
 function updateStats(data) {
     if (!totalPaxEl || !arrivedPaxEl) return;
+
+    // Check for day filter in Stats page context
+    const fDayEl = document.getElementById('stats-filter-day');
+    const fDay = fDayEl ? fDayEl.value : '';
+
     let tPax = 0; let aPax = 0;
     data.forEach(g => {
+        if (g.side && g.side !== currentSide) return;
+
+        // Apply day filter if present
+        if (fDay) {
+            if (fDay === 'day0' && !g.day0) return;
+            if (fDay === 'day1' && !g.day1) return;
+            if (fDay === 'day2' && !g.day2) return;
+            if (fDay === 'day3' && !g.day3) return;
+        }
+
         tPax += g.pax;
         if (g.checked_in) aPax += g.pax;
     });
@@ -930,9 +1011,10 @@ function handleExport() {
             alert('No guests data available to export.');
             return;
         }
-        
+
         const exportData = guestsList.map(g => ({
             "Guest Name": g.name,
+            "Side": g.side || "Bride",
             "Guest Mobile": g.guest_mobile,
             "Pax": g.pax,
             "Family Members": g.members_names,
@@ -960,27 +1042,27 @@ function handleExport() {
             "Departure Date": g.departure_date || "",
             "Departure Time": g.departure_time || ""
         }));
-        
+
         const worksheet = XLSX.utils.json_to_sheet(exportData);
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, "Guests");
-        
+
         const wbout = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
         const blob = new Blob([wbout], { type: "application/octet-stream" });
         const url = URL.createObjectURL(blob);
-        
+
         const a = document.createElement("a");
         a.href = url;
         a.download = "Niyarra_Guests.xlsx";
         document.body.appendChild(a);
-        
+
         a.click();
-        
+
         setTimeout(() => {
             document.body.removeChild(a);
             window.URL.revokeObjectURL(url);
         }, 100);
-        
+
     } catch (err) {
         console.error(err);
         alert("Export Exception: " + err.message);
@@ -1048,6 +1130,18 @@ function openEdit(id) {
     document.getElementById('edit-guest-floor').value = g.floor || '';
     document.getElementById('edit-guest-driver-name').value = g.driver_name || '';
     document.getElementById('edit-guest-driver').value = g.driver_mobile || '';
+
+    // Set Side
+    const sideValue = g.side || 'Bride';
+    const sideRadio = document.querySelector(`#edit-guest-side-selector input[value="${sideValue}"]`);
+    if (sideRadio) {
+        sideRadio.checked = true;
+        // Update active class on parent label
+        document.querySelectorAll('#edit-guest-side-selector .form-side-option').forEach(opt => {
+            if (opt.querySelector('input').value === sideValue) opt.classList.add('active');
+            else opt.classList.remove('active');
+        });
+    }
 
     // Check if new parameters exist in document before assigning (for backward compatibility if missing)
     if (document.getElementById('edit-guest-extra-bedding')) document.getElementById('edit-guest-extra-bedding').checked = !!g.extra_bedding;
@@ -1118,34 +1212,35 @@ if (editGuestForm) editGuestForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const id = document.getElementById('edit-guest-id').value;
     const payload = {
-        name: document.getElementById('edit-guest-name').value,
-        pax: parseInt(document.getElementById('edit-guest-pax').value),
-        hotel: document.getElementById('edit-guest-hotel').value,
-        room: document.getElementById('edit-guest-room').value,
-        floor: document.getElementById('edit-guest-floor').value,
-        guest_mobile: document.getElementById('edit-guest-mobile').value,
+        name: document.getElementById('edit-guest-name')?.value || "",
+        pax: parseInt(document.getElementById('edit-guest-pax')?.value || 1),
+        hotel: document.getElementById('edit-guest-hotel')?.value || "",
+        room: document.getElementById('edit-guest-room')?.value || "",
+        floor: document.getElementById('edit-guest-floor')?.value || "",
+        guest_mobile: document.getElementById('edit-guest-mobile')?.value || "",
         members_names: Array.from(document.querySelectorAll('.edit-guest-pax-member')).map(el => el.value).filter(v => v).join(', '),
-        driver_name: document.getElementById('edit-guest-driver-name').value,
-        driver_mobile: document.getElementById('edit-guest-driver') ? document.getElementById('edit-guest-driver').value : '',
-        description: document.getElementById('edit-guest-description') ? document.getElementById('edit-guest-description').value : '',
-        extra_bedding: document.getElementById('edit-guest-extra-bedding') ? document.getElementById('edit-guest-extra-bedding').checked : false,
-        day0: document.getElementById('edit-guest-day0').checked,
-        day1: document.getElementById('edit-guest-day1').checked,
-        day2: document.getElementById('edit-guest-day2').checked,
-        day3: document.getElementById('edit-guest-day3').checked,
-        transport_needed: document.getElementById('edit-guest-transport-needed').checked,
-        transport_type: document.getElementById('edit-guest-transport-type').value,
-        arrival_location: document.getElementById('edit-guest-arrival-location').value,
-        arrival_date: document.getElementById('edit-guest-arrival-date').value,
-        arrival_time: document.getElementById('edit-guest-arrival-time').value,
-        flight_train_number: document.getElementById('edit-guest-flight-train').value,
-        pickup_arranged: document.getElementById('edit-guest-pickup-arranged').checked,
-        dropoff_arranged: document.getElementById('edit-guest-dropoff-arranged').checked,
-        departure_transport_type: document.getElementById('edit-guest-departure-transport-type').value,
-        departure_location: document.getElementById('edit-guest-departure-location').value,
-        departure_flight_train_number: document.getElementById('edit-guest-departure-flight-train').value,
-        departure_date: document.getElementById('edit-guest-departure-date').value,
-        departure_time: document.getElementById('edit-guest-departure-time').value
+        driver_name: document.getElementById('edit-guest-driver-name')?.value || "",
+        driver_mobile: document.getElementById('edit-guest-driver')?.value || "",
+        description: document.getElementById('edit-guest-description')?.value || "",
+        extra_bedding: document.getElementById('edit-guest-extra-bedding')?.checked || false,
+        day0: document.getElementById('edit-guest-day0')?.checked || false,
+        day1: document.getElementById('edit-guest-day1')?.checked || false,
+        day2: document.getElementById('edit-guest-day2')?.checked || false,
+        day3: document.getElementById('edit-guest-day3')?.checked || false,
+        transport_needed: document.getElementById('edit-guest-transport-needed')?.checked || false,
+        transport_type: document.getElementById('edit-guest-transport-type')?.value || "",
+        arrival_location: document.getElementById('edit-guest-arrival-location')?.value || "",
+        arrival_date: document.getElementById('edit-guest-arrival-date')?.value || "",
+        arrival_time: document.getElementById('edit-guest-arrival-time')?.value || "",
+        flight_train_number: document.getElementById('edit-guest-flight-train')?.value || "",
+        pickup_arranged: document.getElementById('edit-guest-pickup-arranged')?.checked || false,
+        dropoff_arranged: document.getElementById('edit-guest-dropoff-arranged')?.checked || false,
+        departure_transport_type: document.getElementById('edit-guest-departure-transport-type')?.value || "",
+        departure_location: document.getElementById('edit-guest-departure-location')?.value || "",
+        departure_flight_train_number: document.getElementById('edit-guest-departure-flight-train')?.value || "",
+        departure_date: document.getElementById('edit-guest-departure-date')?.value || "",
+        departure_time: document.getElementById('edit-guest-departure-time')?.value || "",
+        side: document.querySelector('input[name="edit_guest_side"]:checked')?.value || "Bride"
     };
 
     try {
@@ -1227,10 +1322,10 @@ if (filterDepartureTimeEl) filterDepartureTimeEl.addEventListener('change', () =
 function populateStatsDateDropdown(data, mode) {
     const dateEl = document.getElementById('stats-filter-date');
     if (!dateEl) return;
-    
+
     const field = mode === 'departures' ? 'departure_date' : 'arrival_date';
     const uniqueDates = [...new Set(data.map(g => g[field]).filter(Boolean))].sort();
-    
+
     dateEl.innerHTML = '<option value="">All Dates</option>';
     uniqueDates.forEach(date => {
         const option = document.createElement('option');
@@ -1258,6 +1353,7 @@ if (statsFilterDateEl) {
 
 const statsFilterDayEl = document.getElementById('stats-filter-day');
 if (statsFilterDayEl) statsFilterDayEl.addEventListener('change', () => {
+    updateStats(guestsList);
     if (document.getElementById('transportChart')) {
         const mode = document.getElementById('stats-type-selector') ? document.getElementById('stats-type-selector').value : 'hotels';
         if (mode === 'hotels') {
@@ -1300,6 +1396,10 @@ window.viewNote = function (id) {
     }
 };
 
+
+// Global Initializations
+initSideSelector();
+initFormSideSelectors();
 fetchGuests();
 
 // Dynamic Table Column Enforcements
@@ -1316,3 +1416,436 @@ if (deptSelectInstance) {
     // Trigger on load
     deptSelectInstance.dispatchEvent(new Event('change'));
 }
+
+// --- Message Scheduling Logic ---
+let msgPageInitialized = false;
+
+window.initMessagePage = async function () {
+    if (msgPageInitialized) {
+        // Already initialized: just re-render for side changes
+        if (typeof _msgUpdateCount === 'function') _msgUpdateCount();
+        if (typeof _msgRenderTable === 'function') _msgRenderTable();
+        return;
+    }
+    msgPageInitialized = true;
+
+    const bulkForm = document.getElementById('bulk-schedule-form');
+    const messagesTbody = document.getElementById('messages-tbody');
+
+    // Edit Modals
+    const editModal = document.getElementById('msg-edit-modal');
+    const editForm = document.getElementById('msg-edit-form');
+    const bulkEditModal = document.getElementById('bulk-edit-modal');
+    const bulkEditForm = document.getElementById('bulk-edit-form');
+    const btnBulkEditSelected = document.getElementById('btn-bulk-edit-selected');
+    const bulkEditCountSpan = document.getElementById('bulk-edit-count');
+    const bulkEditGuestList = document.getElementById('bulk-edit-guest-list');
+    const bulkEditActions = document.getElementById('bulk-edit-actions');
+
+    // Filters
+    const filterName = document.getElementById('msg-filter-name');
+    const filterDay = document.getElementById('msg-filter-day');
+    const filterStatus = document.getElementById('msg-filter-status');
+    const filterPurpose = document.getElementById('msg-filter-purpose');
+    const matchingCountVal = document.getElementById('matching-guests-val');
+
+    if (!messagesTbody || !bulkForm) return;
+
+    let localGuests = [];
+    let localMessages = [];
+
+    function getGreeting(time) {
+        if (!time) return "Hello";
+        const hour = parseInt(time.split(':')[0]);
+        if (hour >= 5 && hour < 12) return "Good Morning";
+        if (hour >= 12 && hour < 17) return "Good Afternoon";
+        return "Good Evening";
+    }
+
+    function getFilteredGuests() {
+        const fName = filterName?.value.toLowerCase() || '';
+        const fDay = filterDay?.value || 'all';
+        const fStatus = filterStatus?.value || 'all';
+
+        return localGuests.filter(g => {
+            if (g.side && g.side !== currentSide) return false;
+            if (fName && !g.name.toLowerCase().includes(fName)) return false;
+            if (fDay !== 'all') {
+                if (fDay === '0' && !g.day0) return false;
+                if (fDay === '1' && !g.day1) return false;
+                if (fDay === '2' && !g.day2) return false;
+                if (fDay === '3' && !g.day3) return false;
+            }
+            if (fStatus === 'arrived' && !g.checked_in) return false;
+            if (fStatus === 'pending' && g.checked_in) return false;
+            return true;
+        });
+    }
+
+    function updateMatchingCount() {
+        if (matchingCountVal) matchingCountVal.textContent = getFilteredGuests().length;
+    }
+    // Expose for singleton re-render
+    window._msgUpdateCount = updateMatchingCount;
+
+    // Wire up all filter controls
+    if (filterName) filterName.addEventListener('input', updateMatchingCount);
+    if (filterDay) filterDay.addEventListener('change', updateMatchingCount);
+    if (filterStatus) filterStatus.addEventListener('change', updateMatchingCount);
+    if (filterPurpose) filterPurpose.addEventListener('input', () => renderMessageTable());
+    document.querySelectorAll('.global-side-selector').forEach(sel => {
+        sel.addEventListener('change', () => { updateMatchingCount(); renderMessageTable(); });
+    });
+
+    function getFilteredMessages() {
+        const fPurpose = filterPurpose?.value.toLowerCase() || '';
+        const currentSide = document.querySelector('.global-side-selector')?.value || 'Bride';
+
+        return localMessages.filter(m => {
+            // Filter by side (via guest lookup)
+            const guest = localGuests.find(g => g.id === m.guest_id);
+            if (guest && guest.side !== currentSide) return false;
+
+            // Filter by purpose
+            if (fPurpose && (!m.purpose || !m.purpose.toLowerCase().includes(fPurpose))) {
+                return false;
+            }
+            return true;
+        });
+    }
+
+    // Populate Guests
+    async function populateGuests() {
+        try {
+            const res = await fetch(`${API_URL}/guests`);
+            localGuests = await res.json();
+            updateMatchingCount();
+        } catch (e) { console.error(e); }
+    }
+
+    function renderMessageTable() {
+        if (!messagesTbody) return;
+        window._msgRenderTable = renderMessageTable;
+        messagesTbody.innerHTML = '';
+
+        const filtered = getFilteredMessages();
+        const now = new Date();
+        const dateStr = now.toISOString().split('T')[0];
+        const timeStr = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+
+        if (filtered.length === 0) {
+            messagesTbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:20px; color:var(--text-muted);">No messages match current filters.</td></tr>';
+            bulkEditActions?.classList.add('hidden');
+            return;
+        }
+
+        bulkEditActions?.classList.remove('hidden');
+
+        filtered.forEach(m => {
+            const tr = document.createElement('tr');
+            let statusClass = 'status-pending';
+            let statusText = m.status;
+
+            if (m.status === 'Pending') {
+                if (m.schedule_date < dateStr || (m.schedule_date === dateStr && m.schedule_time <= timeStr)) {
+                    statusClass = 'status-due';
+                    statusText = 'Due';
+                }
+            } else if (m.status === 'Sent') {
+                statusClass = 'status-sent';
+            }
+
+            tr.innerHTML = `
+                <td>${m.guest_name}</td>
+                <td>${m.purpose || '-'}</td>
+                <td>${m.guest_phone}</td>
+                <td style="white-space: pre-wrap; font-size: 0.9em; min-width: 200px; max-width: 400px; line-height: 1.4;">${m.message}</td>
+                <td>${m.schedule_date}</td>
+                <td>${m.schedule_time}</td>
+                <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                <td>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="btn btn-whatsapp btn-sm" onclick="sendWhatsAppMessage('${m.guest_phone}', '${encodeURIComponent(m.message)}', ${m.id})" title="Send Now">
+                            <i data-lucide="send"></i>
+                        </button>
+                        <button class="btn btn-outline btn-sm" onclick="openMessageEdit(${m.id})" title="Edit">
+                            <i data-lucide="edit"></i>
+                        </button>
+                        <button class="btn btn-outline btn-sm" onclick="deleteScheduledMessage(${m.id})" title="Delete">
+                            <i data-lucide="trash-2"></i>
+                        </button>
+                    </div>
+                </td>
+            `;
+            messagesTbody.appendChild(tr);
+        });
+        if (window.lucide) window.lucide.createIcons();
+    }
+
+    async function fetchAndRenderMessages() {
+        try {
+            const res = await fetch(`${API_URL}/messages`, {
+                headers: { 'Authorization': `Bearer ${getToken()}` }
+            });
+            localMessages = await res.json();
+            renderMessageTable();
+        } catch (e) { console.error(e); }
+    }
+
+    // Modal Close logic
+    document.querySelectorAll('.close-modal').forEach(btn => {
+        btn.addEventListener('click', () => {
+            editModal.classList.add('hidden');
+        });
+    });
+
+    window.openMessageEdit = function (id) {
+        const msg = localMessages.find(m => m.id === id);
+        if (!msg) return;
+
+        document.getElementById('edit-msg-id').value = msg.id;
+        document.getElementById('edit-msg-guest').value = msg.guest_name;
+        document.getElementById('edit-msg-content').value = msg.message;
+        document.getElementById('edit-msg-purpose').value = msg.purpose || '';
+        document.getElementById('edit-msg-date').value = msg.schedule_date;
+        document.getElementById('edit-msg-time').value = msg.schedule_time;
+
+        editModal.classList.remove('hidden');
+        lucide.createIcons();
+    };
+
+    editForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('edit-msg-id').value;
+        const baseContent = document.getElementById('edit-msg-content').value;
+        const timeVal = document.getElementById('edit-msg-time').value;
+
+        // Find existing message to get guest name
+        const existingMsg = localMessages.find(m => m.id == id);
+        if (!existingMsg) return;
+
+        // Apply greeting
+        const greeting = getGreeting(timeVal);
+        let finalMsg = baseContent;
+        // Only add greeting if it doesn't already seem to have one
+        if (!baseContent.includes(existingMsg.guest_name)) {
+            finalMsg = `${greeting} ${existingMsg.guest_name},\n${baseContent}`;
+        }
+
+        const payload = {
+            message: finalMsg,
+            purpose: document.getElementById('edit-msg-purpose').value,
+            schedule_date: document.getElementById('edit-msg-date').value,
+            schedule_time: timeVal
+        };
+
+        try {
+            const res = await fetch(`${API_URL}/messages/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${getToken()}`
+                },
+                body: JSON.stringify(payload)
+            });
+            if (res.ok) {
+                editModal.classList.add('hidden');
+                fetchAndRenderMessages();
+            }
+        } catch (e) { console.error(e); }
+    });
+
+    // Bulk Edit Logic
+    btnBulkEditSelected.addEventListener('click', () => {
+        const filtered = getFilteredMessages();
+        if (filtered.length === 0) return alert('No messages match the current filters!');
+
+        bulkEditCountSpan.textContent = filtered.length;
+
+        // Pre-fill with first message's content/purpose for convenience
+        const firstMsg = filtered[0];
+        if (firstMsg) {
+            document.getElementById('bulk-edit-content').value = firstMsg.message || '';
+            document.getElementById('bulk-edit-purpose').value = firstMsg.purpose || '';
+            document.getElementById('bulk-edit-date').value = firstMsg.schedule_date || '';
+            document.getElementById('bulk-edit-time').value = firstMsg.schedule_time || '';
+        }
+
+        // Populate guest names list in modal
+        if (bulkEditGuestList) {
+            const guestNames = [...new Set(filtered.map(m => m.guest_name))];
+            bulkEditGuestList.innerHTML = guestNames.map(name =>
+                `<span style="background: var(--primary); color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem;">${name}</span>`
+            ).join('');
+        }
+
+        bulkEditModal.classList.remove('hidden');
+    });
+
+    bulkEditForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const newDate = document.getElementById('bulk-edit-date').value;
+        const newTime = document.getElementById('bulk-edit-time').value;
+        const newContent = document.getElementById('bulk-edit-content').value;
+        const newPurpose = document.getElementById('bulk-edit-purpose').value;
+
+        if (!newDate && !newTime && !newContent && !newPurpose) return alert('Please provide at least one field to update');
+
+        const filtered = getFilteredMessages();
+        if (filtered.length === 0) return;
+
+        // If message is being updated, we loop to individualize greetings
+        if (newContent) {
+            let successCount = 0;
+            let failCount = 0;
+            const timeToUse = newTime || filtered[0].schedule_time;
+            const greeting = getGreeting(timeToUse);
+
+            for (const m of filtered) {
+                const finalMsg = `${greeting} ${m.guest_name},\n${newContent}`;
+                const payload = {
+                    message: finalMsg,
+                    purpose: newPurpose || m.purpose,
+                    schedule_date: newDate || m.schedule_date,
+                    schedule_time: timeToUse
+                };
+
+                try {
+                    const res = await fetch(`${API_URL}/messages/${m.id}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${getToken()}`
+                        },
+                        body: JSON.stringify(payload)
+                    });
+                    if (res.ok) successCount++;
+                    else failCount++;
+                } catch (err) { failCount++; }
+            }
+            bulkEditModal.classList.add('hidden');
+            fetchAndRenderMessages();
+            alert(`Updated ${successCount} messages with personalized greetings.`);
+        } else {
+            // Only date/time/purpose changed, use bulk endpoint
+            const payload = {};
+            if (newDate) payload.schedule_date = newDate;
+            if (newTime) payload.schedule_time = newTime;
+            if (newPurpose) payload.purpose = newPurpose;
+
+            try {
+                const res = await fetch(`${API_URL}/messages/bulk-edit`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${getToken()}`
+                    },
+                    body: JSON.stringify({
+                        msg_ids: filtered.map(m => m.id),
+                        msg_update: payload
+                    })
+                });
+                if (res.ok) {
+                    bulkEditModal.classList.add('hidden');
+                    fetchAndRenderMessages();
+                    alert(`Successfully updated ${filtered.length} messages.`);
+                } else {
+                    const errData = await res.json();
+                    const detail = typeof errData.detail === 'string' ? errData.detail : JSON.stringify(errData.detail, null, 2);
+                    alert(`Failed to update: ${detail || res.statusText}`);
+                }
+            } catch (e) {
+                console.error(e);
+                alert('An unexpected error occurred during bulk update.');
+            }
+        }
+    });
+
+
+    // Bulk Logic
+    bulkForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const filtered = getFilteredGuests();
+        if (filtered.length === 0) return alert('No guests match the filters!');
+        if (!confirm(`Schedule this message for all ${filtered.length} matching guests?`)) return;
+
+        const baseMsg = document.getElementById('bulk-msg-content').value;
+        const dateVal = document.getElementById('bulk-msg-date').value;
+        const timeVal = document.getElementById('bulk-msg-time').value;
+        const purposeVal = document.getElementById('bulk-msg-purpose').value;
+        const greeting = getGreeting(timeVal);
+
+        let successCount = 0;
+        let failCount = 0;
+
+        for (const g of filtered) {
+            let finalMsg = `${greeting} ${g.name},\n${baseMsg}`;
+            if (g.members_names) {
+                finalMsg += `\nGreetings to ${g.members_names} as well!`;
+            }
+
+            const payload = {
+                guest_id: g.id,
+                guest_name: g.name,
+                guest_phone: g.guest_mobile || "",
+                message: finalMsg,
+                purpose: purposeVal,
+                schedule_date: dateVal,
+                schedule_time: timeVal
+            };
+
+            try {
+                const res = await fetch(`${API_URL}/messages`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${getToken()}`
+                    },
+                    body: JSON.stringify(payload)
+                });
+                if (res.ok) successCount++;
+                else failCount++;
+            } catch (err) {
+                console.error('Error scheduling for guest', g.name, err);
+                failCount++;
+            }
+        }
+
+        if (failCount > 0) {
+            alert(`Execution finished: ${successCount} successful, ${failCount} failed.`);
+        } else {
+            alert(`Successfully scheduled ${successCount} messages.`);
+        }
+        bulkForm.reset();
+        fetchAndRenderMessages();
+    });
+
+    window.deleteScheduledMessage = async function (id) {
+        if (!confirm('Are you sure you want to delete this scheduled message?')) return;
+        try {
+            await fetch(`${API_URL}/messages/${id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${getToken()}` }
+            });
+            fetchAndRenderMessages();
+        } catch (e) { console.error(e); }
+    };
+
+    window.sendWhatsAppMessage = async function (phone, message, id) {
+        if (!phone) return alert('No phone number available for this guest.');
+        const url = `https://wa.me/${phone.replace(/[^0-9]/g, '')}?text=${message}`;
+        window.open(url, '_blank');
+
+        try {
+            await fetch(`${API_URL}/messages/${id}/status?status_update=Sent`, {
+                method: 'PUT',
+                headers: { 'Authorization': `Bearer ${getToken()}` }
+            });
+            fetchAndRenderMessages();
+        } catch (e) { console.error(e); }
+    };
+
+    await populateGuests();
+    await fetchAndRenderMessages();
+    lucide.createIcons();
+};

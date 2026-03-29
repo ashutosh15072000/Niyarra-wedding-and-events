@@ -15,6 +15,11 @@ from backend import models
 from backend import schemas
 from backend.database import engine, get_db
 
+import logging
+import os
+import asyncio
+from datetime import datetime
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -36,7 +41,46 @@ async def lifespan(app: FastAPI):
         print(f"Error initializing DB: {e}")
     finally:
         db.close()
+    
+    # Start background worker for scheduled messages
+    stop_event = asyncio.Event()
+    worker_task = asyncio.create_task(message_worker(stop_event))
+    
     yield
+    
+    # Shutdown worker
+    stop_event.set()
+    await worker_task
+
+async def message_worker(stop_event: asyncio.Event):
+    logger.info("Message worker started")
+    while not stop_event.is_set():
+        try:
+            db = database.SessionLocal()
+            now = datetime.now()
+            current_date = now.strftime("%Y-%m-%d")
+            current_time = now.strftime("%H:%M")
+            
+            # Find pending messages that are due
+            due_messages = db.query(models.ScheduledMessage).filter(
+                models.ScheduledMessage.status == "Pending",
+                models.ScheduledMessage.schedule_date <= current_date
+            ).all()
+            
+            for msg in due_messages:
+                # Check if time is also due (simple string comparison for now)
+                if msg.schedule_date < current_date or msg.schedule_time <= current_time:
+                    logger.info(f"Message due for {msg.guest_name}: {msg.message}")
+                    # In a real app, we would call the WhatsApp API here.
+                    # For now, we'll mark as 'Sent' to simulate (or 'Due' if we want the user to action it)
+                    # msg.status = "Sent" 
+                    # db.commit()
+            
+            db.close()
+        except Exception as e:
+            logger.error(f"Error in message worker: {e}")
+            
+        await asyncio.sleep(60) # Check every minute
 
 app = FastAPI(lifespan=lifespan)
 
@@ -135,6 +179,58 @@ def edit_guest(guest_id: int, guest_update: schemas.GuestUpdate, db: Session = D
     db.commit()
     db.refresh(db_guest)
     return db_guest
+
+@app.get("/api/messages", response_model=List[schemas.ScheduledMessageRead])
+def get_messages(db: Session = Depends(get_db)):
+    return db.query(models.ScheduledMessage).order_by(models.ScheduledMessage.id.desc()).all()
+
+@app.post("/api/messages", response_model=schemas.ScheduledMessageRead)
+def create_message(msg: schemas.ScheduledMessageCreate, db: Session = Depends(get_db)):
+    db_msg = models.ScheduledMessage(**msg.model_dump())
+    db.add(db_msg)
+    db.commit()
+    db.refresh(db_msg)
+    return db_msg
+
+@app.delete("/api/messages/{msg_id}")
+def delete_message(msg_id: int, db: Session = Depends(get_db)):
+    db_msg = db.query(models.ScheduledMessage).filter(models.ScheduledMessage.id == msg_id).first()
+    if not db_msg:
+        raise HTTPException(status_code=404, detail="Message not found")
+    db.delete(db_msg)
+    db.commit()
+    return {"status": "success"}
+
+@app.put("/api/messages/{msg_id}/status")
+def update_message_status(msg_id: int, status_update: str, db: Session = Depends(get_db)):
+    db_msg = db.query(models.ScheduledMessage).filter(models.ScheduledMessage.id == msg_id).first()
+    if not db_msg:
+        raise HTTPException(status_code=404, detail="Message not found")
+    db_msg.status = status_update
+    db.commit()
+    return db_msg
+
+@app.put("/api/messages/bulk-edit")
+def bulk_edit_messages(bulk_req: schemas.BulkMessageUpdate, db: Session = Depends(get_db)):
+    db_msgs = db.query(models.ScheduledMessage).filter(models.ScheduledMessage.id.in_(bulk_req.msg_ids)).all()
+    for db_msg in db_msgs:
+        for var, value in bulk_req.msg_update.model_dump(exclude_unset=True).items():
+            setattr(db_msg, var, value) if value is not None else None
+    db.commit()
+    return {"status": "success", "updated_count": len(db_msgs)}
+
+@app.put("/api/messages/{msg_id}", response_model=schemas.ScheduledMessageRead)
+def edit_message(msg_id: int, msg_update: schemas.ScheduledMessageUpdate, db: Session = Depends(get_db)):
+    db_msg = db.query(models.ScheduledMessage).filter(models.ScheduledMessage.id == msg_id).first()
+    if not db_msg:
+        raise HTTPException(status_code=404, detail="Message not found")
+    
+    for var, value in msg_update.model_dump(exclude_unset=True).items():
+        setattr(db_msg, var, value) if value is not None else None
+
+    db.commit()
+    db.refresh(db_msg)
+    return db_msg
 
 # Only mount static files in local development, NOT on Vercel
 # Vercel serves frontend/ via @vercel/static in vercel.json
