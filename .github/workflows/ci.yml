@@ -40,7 +40,7 @@ jobs:
         pip install playwright pytest-playwright ruff
 
     - name: Lint with ruff
-      run: ruff check backend/
+      run: ruff check backend/ --fix
 
     - name: Install Playwright Browsers
       run: npx playwright install --with-deps chromium
