@@ -1,3 +1,4 @@
+// Last updated: 2026-03-29 21:15:00
 const API_URL = '/api';
 let guestsList = [];
 
@@ -1454,13 +1455,6 @@ window.initMessagePage = async function () {
     let localGuests = [];
     let localMessages = [];
 
-    function getGreeting(time) {
-        if (!time) return "Hello";
-        const hour = parseInt(time.split(':')[0]);
-        if (hour >= 5 && hour < 12) return "Good Morning";
-        if (hour >= 12 && hour < 17) return "Good Afternoon";
-        return "Good Evening";
-    }
 
     function getFilteredGuests() {
         const fName = filterName?.value.toLowerCase() || '';
@@ -1624,16 +1618,8 @@ window.initMessagePage = async function () {
         const existingMsg = localMessages.find(m => m.id == id);
         if (!existingMsg) return;
 
-        // Apply greeting
-        const greeting = getGreeting(timeVal);
-        let finalMsg = baseContent;
-        // Only add greeting if it doesn't already seem to have one
-        if (!baseContent.includes(existingMsg.guest_name)) {
-            finalMsg = `${greeting} ${existingMsg.guest_name},\n${baseContent}`;
-        }
-
         const payload = {
-            message: finalMsg,
+            message: baseContent,
             purpose: document.getElementById('edit-msg-purpose').value,
             schedule_date: document.getElementById('edit-msg-date').value,
             schedule_time: timeVal
@@ -1699,12 +1685,9 @@ window.initMessagePage = async function () {
             let successCount = 0;
             let failCount = 0;
             const timeToUse = newTime || filtered[0].schedule_time;
-            const greeting = getGreeting(timeToUse);
-
             for (const m of filtered) {
-                const finalMsg = `${greeting} ${m.guest_name},\n${newContent}`;
                 const payload = {
-                    message: finalMsg,
+                    message: newContent,
                     purpose: newPurpose || m.purpose,
                     schedule_date: newDate || m.schedule_date,
                     schedule_time: timeToUse
@@ -1773,22 +1756,15 @@ window.initMessagePage = async function () {
         const dateVal = document.getElementById('bulk-msg-date').value;
         const timeVal = document.getElementById('bulk-msg-time').value;
         const purposeVal = document.getElementById('bulk-msg-purpose').value;
-        const greeting = getGreeting(timeVal);
-
         let successCount = 0;
         let failCount = 0;
 
         for (const g of filtered) {
-            let finalMsg = `${greeting} ${g.name},\n${baseMsg}`;
-            if (g.members_names) {
-                finalMsg += `\nGreetings to ${g.members_names} as well!`;
-            }
-
             const payload = {
                 guest_id: g.id,
                 guest_name: g.name,
                 guest_phone: g.guest_mobile || "",
-                message: finalMsg,
+                message: baseMsg,
                 purpose: purposeVal,
                 schedule_date: dateVal,
                 schedule_time: timeVal
